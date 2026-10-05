@@ -3,7 +3,7 @@ import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import { MacroRing } from '@/components/macro-ring';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
-import type { AppSettings, GoalKey } from '@/db/settings';
+import type { GoalKey, Goals, RingMode } from '@/db/settings';
 import { useRingColors } from '@/hooks/use-ring-colors';
 import type { Nutrition } from '@/types';
 
@@ -15,10 +15,10 @@ const RINGS: { key: GoalKey; label: string }[] = [
   { key: 'fiber', label: 'Fiber' },
 ];
 
-type Props = { consumed: Nutrition; planned: Nutrition; settings: AppSettings };
+type Props = { consumed: Nutrition; planned: Nutrition; goals: Goals; ringMode: RingMode };
 
 /** Five goal rings for the day (eaten items only) plus a note on how much more is planned. */
-export function DailySummary({ consumed, planned, settings }: Props) {
+export function DailySummary({ consumed, planned, goals, ringMode }: Props) {
   const colors = useRingColors();
   const { width } = useWindowDimensions();
   const size = Math.min(68, Math.floor((width - Spacing.three * 2) / RINGS.length) - 4);
@@ -31,9 +31,9 @@ export function DailySummary({ consumed, planned, settings }: Props) {
             key={key}
             label={label}
             value={consumed[key]}
-            goal={settings.goals[key]}
+            goal={goals[key]}
             color={colors[key]}
-            mode={settings.ringMode}
+            mode={ringMode}
             size={size}
           />
         ))}

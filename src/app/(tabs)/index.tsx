@@ -12,6 +12,7 @@ import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, Spacing } from '@/constants/theme';
 import { getEntriesForDate, setMealConsumed } from '@/db/diary';
 import { useSettings } from '@/hooks/use-settings';
+import { goalsForDate } from '@/lib/goals';
 import { sumConsumed, sumPlanned } from '@/lib/nutrition';
 import { useSelectedDate } from '@/lib/selected-date';
 import { MEAL_SLOTS, type DiaryEntry, type MealSlot } from '@/types';
@@ -49,7 +50,12 @@ export default function DiaryScreen() {
     <ThemedView style={styles.fill}>
       <SafeAreaView style={styles.fill} edges={['top']}>
         <DateSwitcher date={date} onChange={setDate} />
-        <DailySummary consumed={sumConsumed(entries)} planned={sumPlanned(entries)} settings={settings} />
+        <DailySummary
+          consumed={sumConsumed(entries)}
+          planned={sumPlanned(entries)}
+          goals={goalsForDate(settings, date)}
+          ringMode={settings.ringMode}
+        />
 
         <ScrollView contentContainerStyle={styles.list}>
           <View style={styles.mealsHeader}>

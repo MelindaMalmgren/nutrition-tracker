@@ -13,6 +13,7 @@ import { Spacing } from '@/constants/theme';
 import { deleteEntry, getEntriesForDate, setEntryConsumed, setMealConsumed } from '@/db/diary';
 import { useSettings } from '@/hooks/use-settings';
 import { useTheme } from '@/hooks/use-theme';
+import { goalsForDate } from '@/lib/goals';
 import { macroPercents, sumConsumed, sumPlanned } from '@/lib/nutrition';
 import { useSelectedDate } from '@/lib/selected-date';
 import { MEAL_SLOTS, type DiaryEntry, type MealSlot } from '@/types';
@@ -77,7 +78,12 @@ export default function DayScreen() {
   return (
     <ThemedView style={styles.fill}>
       <DateSwitcher date={date} onChange={setDate} />
-      <DailySummary consumed={sumConsumed(entries)} planned={sumPlanned(entries)} settings={settings} />
+      <DailySummary
+        consumed={sumConsumed(entries)}
+        planned={sumPlanned(entries)}
+        goals={goalsForDate(settings, date)}
+        ringMode={settings.ringMode}
+      />
 
       <ScrollView ref={scrollRef} contentContainerStyle={styles.content}>
         {loaded &&
