@@ -1,15 +1,22 @@
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { SQLiteProvider } from 'expo-sqlite';
+import { SQLiteProvider, type SQLiteDatabase } from 'expo-sqlite';
 import { Suspense } from 'react';
 import { useColorScheme } from 'react-native';
 
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import { migrateDb } from '@/db/migrations';
+import { getSettings } from '@/db/settings';
 import { useTheme } from '@/hooks/use-theme';
 import { SelectedDateProvider } from '@/lib/selected-date';
+import { applyThemeMode } from '@/lib/theme-mode';
 
 SplashScreen.preventAutoHideAsync();
+
+async function initDb(db: SQLiteDatabase) {
+  await migrateDb(db);
+  applyThemeMode((await getSettings(db)).themeMode);
+}
 
 function Navigation() {
   const colors = useTheme();
@@ -46,7 +53,7 @@ export default function RootLayout() {
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <AnimatedSplashOverlay />
       <Suspense fallback={null}>
-        <SQLiteProvider databaseName="nutrition.db" onInit={migrateDb} useSuspense>
+        <SQLiteProvider databaseName="nutrition.db" onInit={initDb} useSuspense>
           <Navigation />
         </SQLiteProvider>
       </Suspense>

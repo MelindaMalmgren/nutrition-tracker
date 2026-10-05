@@ -73,7 +73,7 @@ In **Add food**, the Meals, Recipes and Custom tabs show the five items you log 
 
 ## Appearance
 
-A sage-green theme with soft, rounded corners. Light or dark always follows the phone. Colors (`Colors`, `RingColors`) and corner sizes (`Radii`) live in `src/constants/theme.ts`; components read them through `useTheme()`, `useRingColors()`, `useRadius()` and `useCard()`, so don't hardcode colors or `borderRadius` for cards, buttons or inputs. Meals that aren't fully checked get a dashed border, and empty meals an outlined, faded card.
+A sage-green theme with soft, rounded corners. Light or dark follows the phone by default; **Settings > Appearance** can force Light or Dark for this app only (saved with your other settings, so a backup restores it). Colors (`Colors`, `RingColors`) and corner sizes (`Radii`) live in `src/constants/theme.ts`; components read them through `useTheme()`, `useRingColors()`, `useRadius()` and `useCard()`, so don't hardcode colors or `borderRadius` for cards, buttons or inputs. Meals that aren't fully checked get a dashed border, and empty meals an outlined, faded card.
 
 ## Project layout
 
