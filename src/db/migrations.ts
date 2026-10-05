@@ -94,6 +94,9 @@ const MIGRATIONS: string[] = [
   ALTER TABLE recipe_ingredients ADD COLUMN serving_size REAL;
   ALTER TABLE recipe_ingredients ADD COLUMN serving_label TEXT;
   `,
+  `
+  ALTER TABLE meals ADD COLUMN times_logged INTEGER NOT NULL DEFAULT 0;
+  `,
 ];
 
 export const MIGRATION_COUNT = MIGRATIONS.length;

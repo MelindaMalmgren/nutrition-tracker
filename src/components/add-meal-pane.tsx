@@ -1,7 +1,7 @@
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useCallback, useEffect, useState } from 'react';
-import { FlatList, Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, SectionList, StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/button';
 import { ThemedText } from '@/components/themed-text';
@@ -9,6 +9,7 @@ import { ThemedTextInput } from '@/components/themed-text-input';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { addMealToDiary, listMeals, type MealSummary } from '@/db/meals';
+import { groupMostUsed } from '@/lib/most-used';
 import { parseNumber } from '@/lib/parse';
 import type { MealSlot } from '@/types';
 
@@ -80,11 +81,19 @@ export function AddMealPane({ date, slot }: { date: string; slot: MealSlot }) {
         )}
       </View>
 
-      <FlatList
-        data={meals}
+      <SectionList
+        sections={groupMostUsed(meals, query.trim() !== '', 'All meals')}
         keyExtractor={(m) => String(m.id)}
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={styles.list}
+        stickySectionHeadersEnabled={false}
+        renderSectionHeader={({ section }) =>
+          section.title ? (
+            <ThemedText type="smallBold" themeColor="textSecondary" style={styles.sectionTitle}>
+              {section.title}
+            </ThemedText>
+          ) : null
+        }
         renderItem={({ item }) => (
           <Pressable onPress={() => setSelected(item)} style={styles.mealRow}>
             <View style={styles.fill}>
@@ -110,6 +119,7 @@ const styles = StyleSheet.create({
   fill: { flex: 1 },
   top: { padding: Spacing.three, gap: Spacing.three },
   list: { paddingHorizontal: Spacing.three, paddingBottom: Spacing.six },
+  sectionTitle: { paddingTop: Spacing.two, paddingBottom: Spacing.one },
   panel: { padding: Spacing.three, borderRadius: 16, gap: Spacing.two },
   servingsRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three },
   servingsInput: { width: 100, textAlign: 'right' },

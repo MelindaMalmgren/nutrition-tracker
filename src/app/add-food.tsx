@@ -1,7 +1,7 @@
 import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useCallback, useState } from 'react';
-import { FlatList, StyleSheet, View } from 'react-native';
+import { SectionList, StyleSheet, View } from 'react-native';
 
 import { AddMealPane } from '@/components/add-meal-pane';
 import { AddSearchPane } from '@/components/add-search-pane';
@@ -15,6 +15,7 @@ import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { addFoodEntry } from '@/db/diary';
 import { listFoods } from '@/db/foods';
+import { groupMostUsed } from '@/lib/most-used';
 import { MEAL_SLOTS, type Food, type MealSlot } from '@/types';
 
 const MODES = ['Food', 'Meals', 'Recipes', 'Custom'] as const;
@@ -61,10 +62,10 @@ function AddSavedPane({ kind, date, slot }: { kind: 'custom' | 'recipe'; date: s
   const copy = SAVED_COPY[kind];
 
   const [query, setQuery] = useState('');
-  const [foods, setFoods] = useState<Food[]>([]);
+  const [foods, setFoods] = useState<(Food & { use_count: number })[]>([]);
   const [selected, setSelected] = useState<Food | null>(null);
 
-  const load = useCallback(async () => setFoods(await listFoods(db, query, kind)), [db, query, kind]);
+  const load = useCallback(async () => setFoods(await listFoods(db, query, kind, true)), [db, query, kind]);
 
   useFocusEffect(
     useCallback(() => {
@@ -96,11 +97,19 @@ function AddSavedPane({ kind, date, slot }: { kind: 'custom' | 'recipe'; date: s
         )}
       </View>
 
-      <FlatList
-        data={foods}
+      <SectionList
+        sections={groupMostUsed(foods, query.trim() !== '', kind === 'recipe' ? 'All recipes' : 'All foods')}
         keyExtractor={(f) => String(f.id)}
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={styles.list}
+        stickySectionHeadersEnabled={false}
+        renderSectionHeader={({ section }) =>
+          section.title ? (
+            <ThemedText type="smallBold" themeColor="textSecondary" style={styles.sectionTitle}>
+              {section.title}
+            </ThemedText>
+          ) : null
+        }
         renderItem={({ item }) => <FoodRow food={item} onPress={() => setSelected(item)} />}
         ListEmptyComponent={
           <ThemedText themeColor="textSecondary">
@@ -117,4 +126,5 @@ const styles = StyleSheet.create({
   modeRow: { paddingHorizontal: Spacing.three, paddingTop: Spacing.three },
   top: { padding: Spacing.three, gap: Spacing.three },
   list: { paddingHorizontal: Spacing.three, paddingBottom: Spacing.six },
+  sectionTitle: { paddingTop: Spacing.two, paddingBottom: Spacing.one },
 });

@@ -3,13 +3,14 @@ import type { SQLiteDatabase } from 'expo-sqlite';
 import { addFoodEntry } from '@/db/diary';
 import type { Food, MealSlot } from '@/types';
 
-export type MealSummary = { id: number; name: string; item_count: number; calories: number };
+export type MealSummary = { id: number; name: string; item_count: number; calories: number; use_count: number };
 export type MealItem = Food & { item_servings: number };
 
 export function listMeals(db: SQLiteDatabase, query = '') {
   return db.getAllAsync<MealSummary>(
     `SELECT m.id, m.name, COUNT(mi.id) AS item_count,
-            COALESCE(SUM(f.calories * mi.servings), 0) AS calories
+            COALESCE(SUM(f.calories * mi.servings), 0) AS calories,
+            m.times_logged AS use_count
        FROM meals m
        LEFT JOIN meal_items mi ON mi.meal_id = m.id
        LEFT JOIN foods f ON f.id = mi.food_id
@@ -78,5 +79,6 @@ export async function addMealToDiary(
     for (const item of items) {
       await addFoodEntry(db, item, { date, meal_slot: slot, servings: item.item_servings * multiplier });
     }
+    await db.runAsync('UPDATE meals SET times_logged = times_logged + 1 WHERE id = ?', mealId);
   });
 }
