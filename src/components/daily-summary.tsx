@@ -1,0 +1,54 @@
+import { StyleSheet, View, useWindowDimensions } from 'react-native';
+
+import { MacroRing } from '@/components/macro-ring';
+import { ThemedText } from '@/components/themed-text';
+import { Spacing } from '@/constants/theme';
+import type { AppSettings, GoalKey } from '@/db/settings';
+import { useRingColors } from '@/hooks/use-ring-colors';
+import type { Nutrition } from '@/types';
+
+const RINGS: { key: GoalKey; label: string }[] = [
+  { key: 'calories', label: 'Calories' },
+  { key: 'fat', label: 'Fat' },
+  { key: 'carbs', label: 'Carbs' },
+  { key: 'protein', label: 'Protein' },
+  { key: 'fiber', label: 'Fiber' },
+];
+
+type Props = { consumed: Nutrition; planned: Nutrition; settings: AppSettings };
+
+/** Five goal rings for the day (eaten items only) plus a note on how much more is planned. */
+export function DailySummary({ consumed, planned, settings }: Props) {
+  const colors = useRingColors();
+  const { width } = useWindowDimensions();
+  const size = Math.min(68, Math.floor((width - Spacing.three * 2) / RINGS.length) - 4);
+
+  return (
+    <View style={styles.wrap}>
+      <View style={styles.row}>
+        {RINGS.map(({ key, label }) => (
+          <MacroRing
+            key={key}
+            label={label}
+            value={consumed[key]}
+            goal={settings.goals[key]}
+            color={colors[key]}
+            mode={settings.ringMode}
+            size={size}
+          />
+        ))}
+      </View>
+      {planned.calories > 0 && (
+        <ThemedText type="small" themeColor="textSecondary" style={styles.planned}>
+          +{Math.round(planned.calories)} kcal planned
+        </ThemedText>
+      )}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  wrap: { paddingHorizontal: Spacing.three, gap: Spacing.two },
+  row: { flexDirection: 'row', justifyContent: 'space-between' },
+  planned: { textAlign: 'center' },
+});

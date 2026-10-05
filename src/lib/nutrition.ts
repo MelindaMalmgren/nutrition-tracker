@@ -21,3 +21,29 @@ export function sumNutrition(items: Nutrition[]): Nutrition {
 export function entryTotal(entry: Nutrition & { servings: number }): Nutrition {
   return scaleNutrition(entry, entry.servings);
 }
+
+/** Share of macro calories from carbs, fat and protein (4/9/4 kcal per gram), or null if there are none. */
+export function macroPercents(n: Nutrition): { carbs: number; fat: number; protein: number } | null {
+  const carbs = n.carbs * 4;
+  const fat = n.fat * 9;
+  const protein = n.protein * 4;
+  const total = carbs + fat + protein;
+  if (total <= 0) return null;
+  return {
+    carbs: Math.round((carbs / total) * 100),
+    fat: Math.round((fat / total) * 100),
+    protein: Math.round((protein / total) * 100),
+  };
+}
+
+type EntryLike =Nutrition & { servings: number; consumed: number };
+
+/** Totals for entries marked eaten. */
+export function sumConsumed(entries: EntryLike[]): Nutrition {
+  return sumNutrition(entries.filter((e) => e.consumed).map(entryTotal));
+}
+
+/** Totals for entries that are only planned (not yet eaten). */
+export function sumPlanned(entries: EntryLike[]): Nutrition {
+  return sumNutrition(entries.filter((e) => !e.consumed).map(entryTotal));
+}

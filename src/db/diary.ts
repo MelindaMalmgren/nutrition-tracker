@@ -7,6 +7,16 @@ export function getEntriesForDate(db: SQLiteDatabase, date: string) {
   return db.getAllAsync<DiaryEntry>('SELECT * FROM diary_entries WHERE date = ? ORDER BY id', date);
 }
 
+/** Dates (YYYY-MM-DD) in the inclusive range that have at least one entry. */
+export async function getDatesWithEntries(db: SQLiteDatabase, from: string, to: string) {
+  const rows = await db.getAllAsync<{ date: string }>(
+    'SELECT DISTINCT date FROM diary_entries WHERE date BETWEEN ? AND ?',
+    from,
+    to,
+  );
+  return new Set(rows.map((r) => r.date));
+}
+
 export function getEntry(db: SQLiteDatabase, id: number) {
   return db.getFirstAsync<DiaryEntry>('SELECT * FROM diary_entries WHERE id = ?', id);
 }
@@ -91,6 +101,20 @@ export async function updateEntry(
     entry.sugar * factor,
     entry.sodium * factor,
     entry.id,
+  );
+}
+
+export async function setEntryConsumed(db: SQLiteDatabase, id: number, consumed: boolean) {
+  await db.runAsync('UPDATE diary_entries SET consumed = ? WHERE id = ?', consumed ? 1 : 0, id);
+}
+
+/** Marks every entry in one meal of a day eaten (or planned). */
+export async function setMealConsumed(db: SQLiteDatabase, date: string, slot: MealSlot, consumed: boolean) {
+  await db.runAsync(
+    'UPDATE diary_entries SET consumed = ? WHERE date = ? AND meal_slot = ?',
+    consumed ? 1 : 0,
+    date,
+    slot,
   );
 }
 

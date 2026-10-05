@@ -1,14 +1,14 @@
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useEffect, useState } from 'react';
-import { KeyboardAvoidingView, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { KeyboardAvoidingView, Pressable, ScrollView, StyleSheet, Switch, View } from 'react-native';
 
 import { Button } from '@/components/button';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedTextInput } from '@/components/themed-text-input';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
-import { getEntry, updateEntry } from '@/db/diary';
+import { getEntry, setEntryConsumed, updateEntry } from '@/db/diary';
 import { useTheme } from '@/hooks/use-theme';
 import { formatDateLabel } from '@/lib/dates';
 import { scaleNutrition } from '@/lib/nutrition';
@@ -38,6 +38,7 @@ export default function EditEntryScreen() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [servings, setServings] = useState('1');
   const [servingSize, setServingSize] = useState('1');
+  const [eaten, setEaten] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
@@ -52,6 +53,7 @@ export default function EditEntryScreen() {
       setSlot(loaded.meal_slot);
       setServings(String(loaded.servings));
       setServingSize(String(loaded.serving_size));
+      setEaten(loaded.consumed === 1);
     })();
     return () => {
       cancelled = true;
@@ -70,6 +72,7 @@ export default function EditEntryScreen() {
   const save = async () => {
     if (!valid) return;
     await updateEntry(db, entry, { meal_slot: slot, servings: servingsValue, serving_size: sizeValue });
+    if (eaten !== (entry.consumed === 1)) await setEntryConsumed(db, entry.id, eaten);
     router.back();
   };
 
@@ -108,6 +111,16 @@ export default function EditEntryScreen() {
                 ))}
               </ThemedView>
             )}
+          </View>
+
+          <View style={styles.eatenRow}>
+            <View style={styles.fill}>
+              <ThemedText type="smallBold">Eaten</ThemedText>
+              <ThemedText type="small" themeColor="textSecondary">
+                Turn off to only plan this item; it won't count toward today's totals.
+              </ThemedText>
+            </View>
+            <Switch value={eaten} onValueChange={setEaten} />
           </View>
 
           <View style={styles.row}>
@@ -164,6 +177,7 @@ const styles = StyleSheet.create({
   content: { padding: Spacing.three, gap: Spacing.three, paddingBottom: Spacing.six },
   name: { fontSize: 24, lineHeight: 32 },
   field: { gap: Spacing.one },
+  eatenRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three },
   row: { flexDirection: 'row', gap: Spacing.three },
   dropdown: {
     flexDirection: 'row',

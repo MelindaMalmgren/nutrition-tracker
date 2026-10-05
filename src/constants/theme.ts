@@ -24,6 +24,29 @@ export const Colors = {
   },
 } as const;
 
+export const RingColors = {
+  light: {
+    calories: '#E8741A',
+    fat: '#3BA13B',
+    carbs: '#1F8A8A',
+    protein: '#D6247A',
+    fiber: '#1B9DB3',
+    track: '#E3E4E8',
+    over: '#D93025',
+    check: '#2E9E5B',
+  },
+  dark: {
+    calories: '#F28A3B',
+    fat: '#6BC36B',
+    carbs: '#35B3B3',
+    protein: '#E8408F',
+    fiber: '#4CC3D6',
+    track: '#2E3135',
+    over: '#FF6B5E',
+    check: '#4CC38A',
+  },
+} as const;
+
 export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
 
 export const Fonts = Platform.select({
