@@ -53,7 +53,7 @@ A recipe is a list of ingredients and how many servings it makes. Each ingredien
 
 ## Project layout
 
-- `src/app/`: screens (Expo Router). `(tabs)/` holds the five main tabs: Diary, Foods, Meals, Recipes, Settings.
+- `src/app/`: screens (Expo Router). `(tabs)/` holds the four main tabs: Diary, Tracker, Library (Foods / Meals / Recipes), Settings. Android's bottom bar allows at most 5 tabs, so keep that in mind before adding another.
 - `src/db/`: SQLite migrations and queries. Add new migrations to the end of the list in `migrations.ts`; never edit one that has shipped.
 - `src/services/`: external APIs (USDA, Open Food Facts).
 - `src/components/`, `src/lib/`, `src/types/`: shared UI, helpers, and types.
