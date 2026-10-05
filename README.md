@@ -47,6 +47,10 @@ Food search uses the USDA FoodData Central API, which needs a free API key.
 
 When adding a food, the **Serving size** dropdown lists the food's label serving, `1 g` / `1 oz` / `100 g` (for gram-based foods), and household measures such as "1 cup, sliced (150 g)" when the source has them. USDA only provides household measures for non-branded foods (Foundation and SR Legacy), fetched when you pick the food. To log something you weighed, pick `1 g` and enter the grams as Servings. Nutrition rescales automatically.
 
+## Recipes
+
+A recipe is a list of ingredients and how many servings it makes. Each ingredient is a number of servings of a chosen serving size (grams, ounces, or a household measure like "1 cup, sliced (150 g)"); tap an ingredient to change either. Per-serving nutrition is the whole pot divided by that number. Saved recipes are logged like any other food from **Add food > Recipes**, and can also be added to meals. Ingredients can come from your saved foods, a USDA search, or a barcode scan. Editing a custom food updates every recipe that uses it, and a food used in a recipe can't be deleted until it is removed from the recipe.
+
 ## Project layout
 
 - `src/app/`: screens (Expo Router). `(tabs)/` holds the five main tabs: Diary, Foods, Meals, Recipes, Settings.

@@ -19,7 +19,11 @@ export default function FoodsScreen() {
   const [query, setQuery] = useState('');
   const [foods, setFoods] = useState<Food[]>([]);
 
-  const load = useCallback(async () => setFoods(await listFoods(db, query)), [db, query]);
+  // Recipes live in the Recipes tab; this list is for individual foods.
+  const load = useCallback(
+    async () => setFoods((await listFoods(db, query)).filter((f) => f.source !== 'recipe')),
+    [db, query],
+  );
 
   useFocusEffect(
     useCallback(() => {

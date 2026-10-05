@@ -10,6 +10,7 @@ import { ThemedTextInput } from '@/components/themed-text-input';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { deleteMeal, getMeal, getMealItems, saveMeal } from '@/db/meals';
+import { useRingColors } from '@/hooks/use-ring-colors';
 import { scaleNutrition, sumNutrition } from '@/lib/nutrition';
 import { parseNumber } from '@/lib/parse';
 import type { Food } from '@/types';
@@ -19,6 +20,7 @@ type Row = { food: Food; servings: string };
 export default function MealScreen() {
   const db = useSQLiteContext();
   const router = useRouter();
+  const colors = useRingColors();
   const params = useLocalSearchParams<{ id?: string }>();
   const editingId = params.id ? Number(params.id) : null;
 
@@ -131,6 +133,14 @@ export default function MealScreen() {
 
           <Button title="+ Add food" variant="secondary" onPress={() => setPickerOpen(true)} />
 
+          {editingId !== null && (
+            <Pressable onPress={confirmDelete} hitSlop={8} style={styles.deleteLink} accessibilityLabel="Delete meal">
+              <ThemedText type="small" style={{ color: colors.over }}>
+                Delete meal
+              </ThemedText>
+            </Pressable>
+          )}
+
           <ThemedView type="backgroundElement" style={styles.totals}>
             <ThemedText type="smallBold">Meal total</ThemedText>
             <ThemedText type="subtitle" style={styles.totalCalories}>
@@ -142,7 +152,6 @@ export default function MealScreen() {
           </ThemedView>
 
           <Button title={editingId === null ? 'Save meal' : 'Save changes'} onPress={save} />
-          {editingId !== null && <Button title="Delete meal" variant="danger" onPress={confirmDelete} />}
         </ScrollView>
       </KeyboardAvoidingView>
 
@@ -160,4 +169,5 @@ const styles = StyleSheet.create({
   remove: { paddingHorizontal: Spacing.one },
   totals: { padding: Spacing.three, borderRadius: 16, gap: Spacing.one },
   totalCalories: { fontSize: 24, lineHeight: 32 },
+  deleteLink: { alignSelf: 'flex-start' },
 });
