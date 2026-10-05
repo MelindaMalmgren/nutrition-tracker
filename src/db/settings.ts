@@ -1,6 +1,6 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 
-export const GOAL_KEYS = ['calories', 'fat', 'carbs', 'protein', 'fiber'] as const;
+export const GOAL_KEYS = ['calories', 'fat', 'carbs', 'protein', 'fiber', 'sugar', 'sodium'] as const;
 export type GoalKey = (typeof GOAL_KEYS)[number];
 export type Goals = Record<GoalKey, number>;
 export type RingMode = 'up' | 'down';
@@ -18,10 +18,16 @@ export type AppSettings = {
   split: MacroSplit;
   /** Fixed daily fiber goal in grams (does not scale with calories). */
   fiber: number;
+  /** Fixed daily sugar goal in grams; 0 means no goal. */
+  sugar: number;
+  /** Fixed daily sodium goal in mg; 0 means no goal. */
+  sodium: number;
 };
 
 export const DEFAULT_SPLIT: MacroSplit = { protein: 30, fat: 30, carbs: 40 };
 export const DEFAULT_FIBER = 25;
+export const DEFAULT_SUGAR = 50;
+export const DEFAULT_SODIUM = 2300;
 export const DEFAULT_CALORIES = 2000;
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -31,6 +37,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   weekdayCalories: Array(7).fill(DEFAULT_CALORIES),
   split: DEFAULT_SPLIT,
   fiber: DEFAULT_FIBER,
+  sugar: DEFAULT_SUGAR,
+  sodium: DEFAULT_SODIUM,
 };
 
 function positive(value: string | undefined, fallback: number, allowZero = false) {
@@ -57,6 +65,8 @@ export async function getSettings(db: SQLiteDatabase): Promise<AppSettings> {
     weekdayCalories: Array.from({ length: 7 }, (_, day) => positive(stored.get(`goal_day_${day}`), calories)),
     split: { protein, fat, carbs },
     fiber: positive(stored.get('goal_fiber'), DEFAULT_FIBER, true),
+    sugar: positive(stored.get('goal_sugar'), DEFAULT_SUGAR, true),
+    sodium: positive(stored.get('goal_sodium'), DEFAULT_SODIUM, true),
   };
 }
 
@@ -77,6 +87,8 @@ export async function saveGoalSettings(db: SQLiteDatabase, s: Omit<AppSettings, 
     await setSetting(db, 'split_fat', String(s.split.fat));
     await setSetting(db, 'split_carbs', String(s.split.carbs));
     await setSetting(db, 'goal_fiber', String(s.fiber));
+    await setSetting(db, 'goal_sugar', String(s.sugar));
+    await setSetting(db, 'goal_sodium', String(s.sodium));
   });
 }
 

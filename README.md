@@ -61,6 +61,12 @@ A recipe is a list of ingredients and how many servings it makes. Each ingredien
 
 An import is all-or-nothing: if the file is damaged, nothing changes. Backups from an older version of the app work; ones from a newer version are refused.
 
+## Nutrients view
+
+Open a day (**View diary** or tap a meal), then switch from **Daily Log** to **Nutrients** at the top. It lists every nutrient the app tracks for that day: calories, protein, carbs, fiber, sugar, fat (with saturated, polyunsaturated, monounsaturated and trans), cholesterol, sodium, potassium, vitamins A and C, calcium and iron. Calories, protein, carbs, fiber, sugar, fat and sodium show your goal, what's left and a progress bar (red once you're over); the rest show totals only. Set fiber, sugar and sodium goals under **Settings > Macro split** (sugar defaults to 50 g and sodium to 2,300 mg; enter 0 to turn a goal off). Only items marked eaten count. Use the date switcher to change days.
+
+USDA and Open Food Facts supply all of these when they have them. Custom foods have a "More nutrients" section on their form. Foods saved before this feature have 0 for the newer nutrients; picking the same USDA food in a search again fills them in, and past diary entries keep their original values.
+
 ## Most used
 
 In **Add food**, the Meals, Recipes and Custom tabs show the five items you log most under "Most used" (when the search box is empty), then everything else alphabetically. Recipes and custom foods are counted from your diary, so history counts immediately; meals are counted each time you log one, starting from zero. While you're searching, matches you've used before just come first.

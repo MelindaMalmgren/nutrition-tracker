@@ -14,6 +14,8 @@ import { BottomTabInset, Spacing } from '@/constants/theme';
 import { addEntry } from '@/db/diary';
 import {
   DEFAULT_FIBER,
+  DEFAULT_SODIUM,
+  DEFAULT_SUGAR,
   DEFAULT_SPLIT,
   getSettings,
   saveGoalSettings,
@@ -22,6 +24,7 @@ import {
 } from '@/db/settings';
 import { todayISO } from '@/lib/dates';
 import { computeGoals, isValidSplit, WEEKDAY_NAMES } from '@/lib/goals';
+import { emptyNutrition } from '@/lib/nutrition';
 import { parseNumber } from '@/lib/parse';
 
 const RING_OPTIONS = ['Count up', 'Count down'] as const;
@@ -36,6 +39,8 @@ export default function SettingsScreen() {
   const [fat, setFat] = useState('');
   const [carbs, setCarbs] = useState('');
   const [fiber, setFiber] = useState('');
+  const [sugar, setSugar] = useState('');
+  const [sodium, setSodium] = useState('');
 
   const loadSettings = useCallback(() => {
     getSettings(db).then((s) => {
@@ -47,6 +52,8 @@ export default function SettingsScreen() {
       setFat(String(s.split.fat));
       setCarbs(String(s.split.carbs));
       setFiber(String(s.fiber));
+      setSugar(String(s.sugar));
+      setSodium(String(s.sodium));
     });
   }, [db]);
 
@@ -76,16 +83,24 @@ export default function SettingsScreen() {
       : null;
   const split = candidate && isValidSplit(candidate) ? candidate : null;
   const fiberOk = fiberGrams !== null && fiberGrams >= 0;
+  const sugarGrams = parseNumber(sugar);
+  const sodiumMg = parseNumber(sodium);
+  const sugarOk = sugarGrams !== null && sugarGrams >= 0;
+  const sodiumOk = sodiumMg !== null && sodiumMg >= 0;
   const caloriesNum = parseNumber(calories);
 
   const previewFor = (kcal: number | null) =>
-    split && fiberOk && kcal !== null && kcal > 0 ? computeGoals(kcal, split, fiberGrams) : null;
+    split && fiberOk && sugarOk && sodiumOk && kcal !== null && kcal > 0
+      ? computeGoals(kcal, split, { fiber: fiberGrams, sugar: sugarGrams, sodium: sodiumMg })
+      : null;
 
   const resetSplit = () => {
     setProtein(String(DEFAULT_SPLIT.protein));
     setFat(String(DEFAULT_SPLIT.fat));
     setCarbs(String(DEFAULT_SPLIT.carbs));
     setFiber(String(DEFAULT_FIBER));
+    setSugar(String(DEFAULT_SUGAR));
+    setSodium(String(DEFAULT_SODIUM));
   };
 
   const save = async () => {
@@ -96,6 +111,8 @@ export default function SettingsScreen() {
       );
     }
     if (!fiberOk) return Alert.alert('Invalid fiber', 'Fiber must be a number, 0 or greater.');
+    if (!sugarOk) return Alert.alert('Invalid sugar', 'Sugar must be a number, 0 or greater.');
+    if (!sodiumOk) return Alert.alert('Invalid sodium', 'Sodium must be a number, 0 or greater.');
     if (caloriesNum === null || caloriesNum <= 0) {
       return Alert.alert('Invalid calories', 'Calories must be a number greater than 0.');
     }
@@ -109,12 +126,21 @@ export default function SettingsScreen() {
       weekdayCalories.push(value !== null && value > 0 ? value : caloriesNum);
     }
 
-    await saveGoalSettings(db, { calories: caloriesNum, perDay, weekdayCalories, split, fiber: fiberGrams });
+    await saveGoalSettings(db, {
+      calories: caloriesNum,
+      perDay,
+      weekdayCalories,
+      split,
+      fiber: fiberGrams,
+      sugar: sugarGrams,
+      sodium: sodiumMg,
+    });
     Alert.alert('Saved', 'Your daily goals were updated.');
   };
 
   const addSampleEntry = async () => {
     await addEntry(db, {
+      ...emptyNutrition(),
       date: todayISO(),
       meal_slot: 'Breakfast',
       name: 'Sample oatmeal',
@@ -125,7 +151,6 @@ export default function SettingsScreen() {
       fat: 3,
       fiber: 4,
       sugar: 1,
-      sodium: 0,
     });
     Alert.alert('Added', 'Sample entry added to today\'s Breakfast.');
   };
@@ -212,8 +237,8 @@ export default function SettingsScreen() {
               Macro split
             </ThemedText>
             <ThemedText type="small" themeColor="textSecondary">
-              Percent of calories from each macro; the three should add up to 100%. Fiber is a fixed amount that
-              doesn't change with calories.
+              Percent of calories from each macro; the three should add up to 100%. Fiber, sugar and sodium are fixed
+              daily amounts that don't change with calories. Set sugar or sodium to 0 for no goal.
             </ThemedText>
             <ThemedView type="backgroundElement" style={styles.card}>
               <View style={styles.inputRow}>
@@ -240,8 +265,18 @@ export default function SettingsScreen() {
                 <ThemedText style={styles.fill}>Fiber (g)</ThemedText>
                 <ThemedTextInput style={styles.input} value={fiber} onChangeText={setFiber} keyboardType="decimal-pad" />
               </View>
+              <View style={styles.inputRow}>
+                <ThemedText style={styles.fill}>Sugar (g)</ThemedText>
+                <ThemedTextInput style={styles.input} value={sugar} onChangeText={setSugar} keyboardType="decimal-pad" />
+              </View>
+              <View style={styles.inputRow}>
+                <ThemedText style={styles.fill}>Sodium (mg)</ThemedText>
+                <ThemedTextInput style={styles.input} value={sodium} onChangeText={setSodium} keyboardType="decimal-pad" />
+              </View>
               <Pressable onPress={resetSplit} hitSlop={8}>
-                <ThemedText type="linkPrimary">Reset to defaults (30% protein, 30% fat, 40% carbs, 25 g fiber)</ThemedText>
+                <ThemedText type="linkPrimary">
+                  Reset to defaults (30% protein, 30% fat, 40% carbs, 25 g fiber, 50 g sugar, 2,300 mg sodium)
+                </ThemedText>
               </Pressable>
             </ThemedView>
 

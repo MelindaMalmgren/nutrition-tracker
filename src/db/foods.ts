@@ -1,6 +1,7 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 
-import type { Food, FoodSource, LookupFood, Nutrition, ServingOption } from '@/types';
+import { NUTRIENT_ASSIGNMENTS, NUTRIENT_COLUMNS, NUTRIENT_PLACEHOLDERS, nutrientValues } from '@/lib/nutrition';
+import { NUTRIENT_KEYS, type Food, type FoodSource, type LookupFood, type Nutrition, type ServingOption } from '@/types';
 
 export type NewCustomFood = Nutrition & {
   name: string;
@@ -24,24 +25,35 @@ export function listFoods(db: SQLiteDatabase, query = '', source?: FoodSource, w
   );
 }
 
-/** Saves a food looked up from an external database, reusing the existing row if it was saved before. */
+/**
+ * Saves a food looked up from an external database, reusing the existing row if it was saved before. A reused row
+ * gains any nutrient it has as 0 that the lookup knows (e.g. ones added after it was first saved); nothing else changes.
+ */
 export async function upsertExternalFood(db: SQLiteDatabase, food: LookupFood): Promise<number> {
-  const existing = await db.getFirstAsync<{ id: number }>(
-    'SELECT id FROM foods WHERE source = ? AND external_id = ?',
+  const existing = await db.getFirstAsync<Food>(
+    'SELECT * FROM foods WHERE source = ? AND external_id = ?',
     food.source,
     food.external_id,
   );
   const portions = food.portions ? JSON.stringify(food.portions) : null;
   if (existing) {
     if (portions) await db.runAsync('UPDATE foods SET portions = ? WHERE id = ?', portions, existing.id);
+    const missing = NUTRIENT_KEYS.filter((key) => existing[key] === 0 && food[key] > 0);
+    if (missing.length > 0) {
+      await db.runAsync(
+        `UPDATE foods SET ${missing.map((key) => `${key} = ?`).join(', ')} WHERE id = ?`,
+        ...missing.map((key) => food[key]),
+        existing.id,
+      );
+    }
     return existing.id;
   }
 
   const result = await db.runAsync(
     `INSERT INTO foods
        (name, brand, barcode, source, external_id, portions, serving_size, serving_unit, serving_label,
-        calories, protein, carbs, fat, fiber, sugar, sodium)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        ${NUTRIENT_COLUMNS})
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ${NUTRIENT_PLACEHOLDERS})`,
     food.name,
     food.brand,
     food.barcode,
@@ -51,13 +63,7 @@ export async function upsertExternalFood(db: SQLiteDatabase, food: LookupFood): 
     food.serving_size,
     food.serving_unit,
     food.serving_label ?? null,
-    food.calories,
-    food.protein,
-    food.carbs,
-    food.fat,
-    food.fiber,
-    food.sugar,
-    food.sodium,
+    ...nutrientValues(food),
   );
   return result.lastInsertRowId;
 }
@@ -81,20 +87,13 @@ export function getFood(db: SQLiteDatabase, id: number) {
 
 export async function updateCustomFood(db: SQLiteDatabase, id: number, food: NewCustomFood) {
   await db.runAsync(
-    `UPDATE foods SET name = ?, brand = ?, serving_size = ?, serving_unit = ?,
-       calories = ?, protein = ?, carbs = ?, fat = ?, fiber = ?, sugar = ?, sodium = ?
+    `UPDATE foods SET name = ?, brand = ?, serving_size = ?, serving_unit = ?, ${NUTRIENT_ASSIGNMENTS}
      WHERE id = ? AND source = 'custom'`,
     food.name,
     food.brand,
     food.serving_size,
     food.serving_unit,
-    food.calories,
-    food.protein,
-    food.carbs,
-    food.fat,
-    food.fiber,
-    food.sugar,
-    food.sodium,
+    ...nutrientValues(food),
     id,
   );
 }
@@ -113,19 +112,13 @@ export async function deleteFood(db: SQLiteDatabase, id: number): Promise<boolea
 export async function insertCustomFood(db: SQLiteDatabase, food: NewCustomFood) {
   const result = await db.runAsync(
     `INSERT INTO foods
-       (name, brand, barcode, source, serving_size, serving_unit, calories, protein, carbs, fat, fiber, sugar, sodium)
-     VALUES (?, ?, NULL, 'custom', ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       (name, brand, barcode, source, serving_size, serving_unit, ${NUTRIENT_COLUMNS})
+     VALUES (?, ?, NULL, 'custom', ?, ?, ${NUTRIENT_PLACEHOLDERS})`,
     food.name,
     food.brand,
     food.serving_size,
     food.serving_unit,
-    food.calories,
-    food.protein,
-    food.carbs,
-    food.fat,
-    food.fiber,
-    food.sugar,
-    food.sodium,
+    ...nutrientValues(food),
   );
   return result.lastInsertRowId;
 }

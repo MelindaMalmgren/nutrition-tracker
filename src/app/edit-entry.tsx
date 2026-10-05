@@ -11,19 +11,10 @@ import { Spacing } from '@/constants/theme';
 import { getEntry, setEntryConsumed, updateEntry } from '@/db/diary';
 import { useTheme } from '@/hooks/use-theme';
 import { formatDateLabel } from '@/lib/dates';
+import { NUTRIENTS } from '@/lib/nutrients';
 import { scaleNutrition } from '@/lib/nutrition';
 import { parseNumber } from '@/lib/parse';
-import { MEAL_SLOTS, type DiaryEntry, type MealSlot, type NutrientKey } from '@/types';
-
-const NUTRIENT_ROWS: { key: NutrientKey; label: string; unit: string }[] = [
-  { key: 'calories', label: 'Calories', unit: 'kcal' },
-  { key: 'protein', label: 'Protein', unit: 'g' },
-  { key: 'carbs', label: 'Carbs', unit: 'g' },
-  { key: 'fat', label: 'Fat', unit: 'g' },
-  { key: 'fiber', label: 'Fiber', unit: 'g' },
-  { key: 'sugar', label: 'Sugar', unit: 'g' },
-  { key: 'sodium', label: 'Sodium', unit: 'mg' },
-];
+import { MEAL_SLOTS, type DiaryEntry, type MealSlot } from '@/types';
 
 const fmt = (n: number) => String(Math.round(n * 10) / 10);
 
@@ -146,9 +137,9 @@ export default function EditEntryScreen() {
                 Total
               </ThemedText>
             </View>
-            {NUTRIENT_ROWS.filter((r) => r.key !== 'sodium' || entry.sodium > 0).map((r) => (
+            {NUTRIENTS.filter((r) => r.group === 'main' || entry[r.key] > 0).map((r) => (
               <View key={r.key} style={styles.tableRow}>
-                <ThemedText style={styles.labelCol}>{r.label}</ThemedText>
+                <ThemedText style={[styles.labelCol, r.indent && styles.indent]}>{r.label}</ThemedText>
                 <ThemedText style={styles.numCol}>
                   {perServing ? fmt(perServing[r.key]) : '–'} {r.unit}
                 </ThemedText>
@@ -193,5 +184,6 @@ const styles = StyleSheet.create({
   table: { padding: Spacing.three, borderRadius: 16, gap: Spacing.two },
   tableRow: { flexDirection: 'row' },
   labelCol: { flex: 1.2 },
+  indent: { paddingLeft: Spacing.three },
   numCol: { flex: 1, textAlign: 'right' },
 });
