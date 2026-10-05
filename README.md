@@ -53,7 +53,13 @@ A recipe is a list of ingredients and how many servings it makes. Each ingredien
 
 ## Backup and restore
 
-**Settings > Backup** exports everything (diary, foods, meals, recipes, goals) to one JSON file and opens the Android share sheet, so you can save it to Drive, email it, and so on. **Import backup** picks a file, shows what's in it, and, after you confirm, replaces everything currently in the app. The restore is all-or-nothing: if the file is damaged, nothing changes. Backups from an older version of the app restore fine; ones from a newer version are refused.
+**Settings > Backup** exports everything (diary, foods, meals, recipes, goals) to one JSON file and opens the Android share sheet, so you can save it to Drive, email it, and so on. **Import backup** picks a file and lets you choose which parts to bring in, and how:
+
+- **Update** (default): **Diary** and **Goals and settings** replace what's in the app. **Foods** adds the ones you don't have yet (matched by USDA/Open Food Facts ID, barcode, or name and brand) and keeps the rest. **Meals** and **Recipes** are added, or updated in place when one with the same name already exists; others are kept. Choosing everything replaces all data with the backup exactly.
+- **Add new only**: nothing that exists is changed or deleted. Recipes and meals are added only if no one of that name exists, diary entries only for days with no entries yet, and settings only if not already set.
+- In both modes, foods that the chosen meals and recipes need are added automatically.
+
+An import is all-or-nothing: if the file is damaged, nothing changes. Backups from an older version of the app work; ones from a newer version are refused.
 
 ## Project layout
 
