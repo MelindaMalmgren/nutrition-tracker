@@ -11,6 +11,7 @@
       "icon": "./assets/expo.icon"
     },
     "android": {
+      "package": "com.melindamalmgren.nutritiontracker",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -38,13 +39,21 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "Allow Nutrition Tracker to use the camera to scan food barcodes."
+          "cameraPermission": "Allow Nutrition Tracker to use the camera to scan food barcodes.",
+          "recordAudioAndroid": false
         }
       ]
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "ec677598-abcf-4bd8-8b9e-ab2146e0aea8"
+      }
+    },
+    "owner": "melindamalm"
   }
 }
