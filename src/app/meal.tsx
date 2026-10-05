@@ -112,7 +112,7 @@ export default function MealScreen() {
                 <View style={styles.fill}>
                   <ThemedText>{row.food.name}</ThemedText>
                   <ThemedText type="small" themeColor="textSecondary">
-                    {row.food.serving_size} {row.food.serving_unit} · {Math.round(row.food.calories * servings)} kcal
+                    {row.food.serving_size} {row.food.serving_unit} · {Math.round(row.food.calories * servings)} cal
                   </ThemedText>
                 </View>
                 <ThemedTextInput
@@ -146,7 +146,7 @@ export default function MealScreen() {
           <ThemedView type="backgroundElement" style={[styles.totals, card]}>
             <ThemedText type="smallBold">Meal total</ThemedText>
             <ThemedText type="subtitle" style={styles.totalCalories}>
-              {Math.round(total.calories)} kcal
+              {Math.round(total.calories)} cal
             </ThemedText>
             <ThemedText type="small" themeColor="textSecondary">
               P {Math.round(total.protein)}g · C {Math.round(total.carbs)}g · F {Math.round(total.fat)}g

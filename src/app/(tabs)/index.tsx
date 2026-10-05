@@ -13,7 +13,7 @@ import { BottomTabInset, Spacing } from '@/constants/theme';
 import { getEntriesForDate, setMealConsumed } from '@/db/diary';
 import { useSettings } from '@/hooks/use-settings';
 import { goalsForDate } from '@/lib/goals';
-import { sumConsumed, sumPlanned } from '@/lib/nutrition';
+import { sumConsumed } from '@/lib/nutrition';
 import { useSelectedDate } from '@/lib/selected-date';
 import { MEAL_SLOTS, type DiaryEntry, type MealSlot } from '@/types';
 
@@ -52,7 +52,6 @@ export default function DiaryScreen() {
         <DateSwitcher date={date} onChange={setDate} />
         <DailySummary
           consumed={sumConsumed(entries)}
-          planned={sumPlanned(entries)}
           goals={goalsForDate(settings, date)}
           ringMode={settings.ringMode}
         />

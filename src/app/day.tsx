@@ -103,7 +103,6 @@ export default function DayScreen() {
         <>
           <DailySummary
             consumed={sumConsumed(entries)}
-            planned={sumPlanned(entries)}
             goals={goalsForDate(settings, date)}
             ringMode={settings.ringMode}
           />

@@ -54,7 +54,7 @@ export function AddMealPane({ date, slot }: { date: string; slot: MealSlot }) {
           <ThemedView type="backgroundElement" style={[styles.panel, card]}>
             <ThemedText type="smallBold">{selected.name}</ThemedText>
             <ThemedText type="small" themeColor="textSecondary">
-              {selected.item_count} item{selected.item_count === 1 ? '' : 's'} · {Math.round(selected.calories)} kcal
+              {selected.item_count} item{selected.item_count === 1 ? '' : 's'} · {Math.round(selected.calories)} cal
             </ThemedText>
             <View style={styles.servingsRow}>
               <ThemedText style={styles.fill}>Servings of this meal</ThemedText>
@@ -67,7 +67,7 @@ export function AddMealPane({ date, slot }: { date: string; slot: MealSlot }) {
             </View>
             {valid && (
               <ThemedText type="small" themeColor="textSecondary">
-                {Math.round(selected.calories * multiplierValue)} kcal total, logged as separate entries
+                {Math.round(selected.calories * multiplierValue)} cal total, logged as separate entries
               </ThemedText>
             )}
             <View style={styles.row}>
@@ -101,7 +101,7 @@ export function AddMealPane({ date, slot }: { date: string; slot: MealSlot }) {
                 {item.item_count} item{item.item_count === 1 ? '' : 's'}
               </ThemedText>
             </View>
-            <ThemedText>{Math.round(item.calories)} kcal</ThemedText>
+            <ThemedText>{Math.round(item.calories)} cal</ThemedText>
           </Pressable>
         )}
         ListEmptyComponent={

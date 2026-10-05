@@ -97,7 +97,7 @@ export function ServingPanel({
 
       {total ? (
         <ThemedText type="small" themeColor="textSecondary">
-          Total: {Math.round(total.calories)} kcal · P {Math.round(total.protein)}g · C {Math.round(total.carbs)}g · F{' '}
+          Total: {Math.round(total.calories)} cal · P {Math.round(total.protein)}g · C {Math.round(total.carbs)}g · F{' '}
           {Math.round(total.fat)}g
         </ThemedText>
       ) : (

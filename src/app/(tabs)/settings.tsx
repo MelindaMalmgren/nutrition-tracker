@@ -197,7 +197,7 @@ export default function SettingsScreen() {
             {!perDay ? (
               <ThemedView type="backgroundElement" style={[styles.card, card]}>
                 <View style={styles.inputRow}>
-                  <ThemedText style={styles.fill}>Calories (kcal)</ThemedText>
+                  <ThemedText style={styles.fill}>Calories (cal)</ThemedText>
                   <ThemedTextInput
                     style={styles.input}
                     value={calories}
