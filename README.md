@@ -75,6 +75,10 @@ In **Add food**, the Meals, Recipes and Custom tabs show the five items you log 
 
 A sage-green theme with soft, rounded corners. Light or dark follows the phone by default; **Settings > Appearance** can force Light or Dark for this app only (saved with your other settings, so a backup restores it). Colors (`Colors`, `RingColors`) and corner sizes (`Radii`) live in `src/constants/theme.ts`; components read them through `useTheme()`, `useRingColors()`, `useRadius()` and `useCard()`, so don't hardcode colors or `borderRadius` for cards, buttons or inputs. Meals that aren't fully checked get a dashed border, and empty meals an outlined, faded card.
 
+## Calorie trend
+
+The top of the **Tracker** tab charts calories eaten per day over the last 7, 30 or 90 days. Touch or drag along the line to see a day's total; tap the same day again to hide it. The dashed line is that day's calorie goal, and days with nothing logged are left blank rather than shown as zero. Below the chart, two tiles show your average per logged day and how many logged days were on target (within 10% of the goal). Only checked items count.
+
 ## Project layout
 
 - `src/app/`: screens (Expo Router). `(tabs)/` holds the four main tabs: Diary, Tracker, Library (Foods / Meals / Recipes), Settings. Android's bottom bar allows at most 5 tabs, so keep that in mind before adding another.

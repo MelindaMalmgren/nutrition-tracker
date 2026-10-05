@@ -4,6 +4,7 @@ import { useCallback, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { CalorieTrend } from '@/components/calorie-trend';
 import { MonthCalendar } from '@/components/month-calendar';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -13,6 +14,7 @@ import { useCard } from '@/hooks/use-card';
 import { useRingColors } from '@/hooks/use-ring-colors';
 import { useSettings } from '@/hooks/use-settings';
 import { useTheme } from '@/hooks/use-theme';
+import { goalStatus } from '@/lib/calorie-series';
 import { readableOn } from '@/lib/color';
 import { todayISO } from '@/lib/dates';
 import { caloriesForDate } from '@/lib/goals';
@@ -30,9 +32,10 @@ export default function TrackerScreen() {
 
   const today = todayISO();
   const goalColor = (eaten: number, goal: number) => {
-    const ratio = eaten / goal;
-    return ratio > 1.1 ? colors.calories : ratio < 0.9 ? colors.carbs : colors.check;
+    const status = goalStatus(eaten, goal);
+    return status === 'over' ? colors.calories : status === 'under' ? colors.carbs : colors.check;
   };
+  const goalFor = useCallback((iso: string) => caloriesForDate(settings, iso), [settings]);
   const [view, setView] = useState(() => {
     const now = new Date();
     return { year: now.getFullYear(), month: now.getMonth() };
@@ -68,6 +71,8 @@ export default function TrackerScreen() {
       <SafeAreaView style={styles.fill} edges={['top']}>
         <ScrollView contentContainerStyle={styles.content}>
           <ThemedText type="subtitle">Tracker</ThemedText>
+
+          <CalorieTrend calories={calories} today={today} goalFor={goalFor} />
 
           <ThemedView type="backgroundElement" style={[styles.card, card]}>
             <ThemedText style={styles.big}>
