@@ -153,7 +153,7 @@ export default function RecipeScreen() {
                 <ThemedText>{row.food.name}</ThemedText>
                 <ThemedText type="small" themeColor="textSecondary">
                   {describe(row)} · {Math.round(row.food.calories * ingredientMultiplier(row.food, row.servings, row.size))}{' '}
-                  kcal
+                  cal
                 </ThemedText>
               </Pressable>
               <Pressable
@@ -175,7 +175,7 @@ export default function RecipeScreen() {
           <ThemedView type="backgroundElement" style={[styles.totals, card]}>
             <ThemedText type="smallBold">Per serving</ThemedText>
             <ThemedText type="subtitle" style={styles.totalCalories}>
-              {perServing ? Math.round(perServing.calories) : '–'} kcal
+              {perServing ? Math.round(perServing.calories) : '–'} cal
             </ThemedText>
             {perServing && (
               <ThemedText type="small" themeColor="textSecondary">
@@ -184,7 +184,7 @@ export default function RecipeScreen() {
               </ThemedText>
             )}
             <ThemedText type="small" themeColor="textSecondary">
-              Whole recipe: {Math.round(wholeRecipe.calories)} kcal
+              Whole recipe: {Math.round(wholeRecipe.calories)} cal
             </ThemedText>
           </ThemedView>
 

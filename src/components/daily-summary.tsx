@@ -1,7 +1,6 @@
 import { StyleSheet, View, useWindowDimensions } from 'react-native';
 
 import { MacroRing } from '@/components/macro-ring';
-import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import type { GoalKey, Goals, RingMode } from '@/db/settings';
 import { useRingColors } from '@/hooks/use-ring-colors';
@@ -15,10 +14,10 @@ const RINGS: { key: GoalKey; label: string }[] = [
   { key: 'fiber', label: 'Fiber' },
 ];
 
-type Props = { consumed: Nutrition; planned: Nutrition; goals: Goals; ringMode: RingMode };
+type Props = { consumed: Nutrition; goals: Goals; ringMode: RingMode };
 
-/** Five goal rings for the day (eaten items only) plus a note on how much more is planned. */
-export function DailySummary({ consumed, planned, goals, ringMode }: Props) {
+/** Five goal rings for the day (eaten items only). */
+export function DailySummary({ consumed, goals, ringMode }: Props) {
   const colors = useRingColors();
   const { width } = useWindowDimensions();
   const size = Math.min(68, Math.floor((width - Spacing.three * 2) / RINGS.length) - 4);
@@ -38,11 +37,6 @@ export function DailySummary({ consumed, planned, goals, ringMode }: Props) {
           />
         ))}
       </View>
-      {planned.calories > 0 && (
-        <ThemedText type="small" themeColor="textSecondary" style={styles.planned}>
-          +{Math.round(planned.calories)} kcal planned
-        </ThemedText>
-      )}
     </View>
   );
 }
@@ -50,5 +44,4 @@ export function DailySummary({ consumed, planned, goals, ringMode }: Props) {
 const styles = StyleSheet.create({
   wrap: { paddingHorizontal: Spacing.three, gap: Spacing.two },
   row: { flexDirection: 'row', justifyContent: 'space-between' },
-  planned: { textAlign: 'center' },
 });

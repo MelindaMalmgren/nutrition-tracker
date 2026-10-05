@@ -15,7 +15,7 @@ export type NutrientDef = {
 
 /** In the order they appear on the Nutrients view. */
 export const NUTRIENTS: NutrientDef[] = [
-  { key: 'calories', label: 'Calories', unit: 'kcal', group: 'main', goal: 'calories' },
+  { key: 'calories', label: 'Calories', unit: 'cal', group: 'main', goal: 'calories' },
   { key: 'protein', label: 'Protein', unit: 'g', group: 'main', goal: 'protein' },
   { key: 'carbs', label: 'Carbohydrates', unit: 'g', group: 'main', goal: 'carbs' },
   { key: 'fiber', label: 'Fiber', unit: 'g', group: 'main', goal: 'fiber' },

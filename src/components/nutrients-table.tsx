@@ -68,7 +68,7 @@ export function NutrientsTable({ consumed, planned, goals }: Props) {
 
       {planned.calories > 0 && (
         <ThemedText type="small" themeColor="textSecondary" style={styles.planned}>
-          +{fmt(planned.calories)} kcal planned, not counted above
+          +{fmt(planned.calories)} cal planned, not counted above
         </ThemedText>
       )}
     </View>

@@ -44,7 +44,7 @@ export function MealsList() {
                 {item.item_count} item{item.item_count === 1 ? '' : 's'}
               </ThemedText>
             </View>
-            <ThemedText>{Math.round(item.calories)} kcal</ThemedText>
+            <ThemedText>{Math.round(item.calories)} cal</ThemedText>
           </Pressable>
         )}
         ListEmptyComponent={

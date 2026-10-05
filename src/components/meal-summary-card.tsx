@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { CheckCircle, mealCheckState } from '@/components/check-circle';
+import { CheckCircle, mealCheckState, mealProgress } from '@/components/check-circle';
 import { MacroLine } from '@/components/macro-line';
 import { MealIcon } from '@/components/meal-icon';
 import { ThemedText } from '@/components/themed-text';
@@ -93,7 +93,12 @@ export function MealSummaryCard({ slot, entries, onOpen, onLog, onToggleAll }: P
             </ThemedText>
           </Pressable>
           {entries.length > 0 && (
-            <CheckCircle state={mealCheckState(entries)} onPress={onToggleAll} label={`Mark all of ${slot} eaten`} />
+            <CheckCircle
+              state={mealCheckState(entries)}
+              progress={mealProgress(entries)}
+              onPress={onToggleAll}
+              label={`Mark all of ${slot} eaten`}
+            />
           )}
         </View>
       </ThemedView>

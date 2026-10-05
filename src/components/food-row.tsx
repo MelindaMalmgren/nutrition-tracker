@@ -16,7 +16,7 @@ export function FoodRow({ food, onPress }: { food: RowFood; onPress?: () => void
           {detail}
         </ThemedText>
       </View>
-      <ThemedText>{Math.round(food.calories)} kcal</ThemedText>
+      <ThemedText>{Math.round(food.calories)} cal</ThemedText>
     </Pressable>
   );
 }
