@@ -1,44 +1,51 @@
 import { useSQLiteContext } from 'expo-sqlite';
 import { useEffect, useState } from 'react';
-import { Alert, KeyboardAvoidingView, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Alert, KeyboardAvoidingView, Pressable, ScrollView, StyleSheet, Switch, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/button';
+import { GoalPreview } from '@/components/goal-preview';
 import { SegmentedControl } from '@/components/segmented-control';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedTextInput } from '@/components/themed-text-input';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, Spacing } from '@/constants/theme';
 import { addEntry } from '@/db/diary';
-import { GOAL_KEYS, getSettings, saveGoals, saveRingMode, type GoalKey, type RingMode } from '@/db/settings';
+import {
+  DEFAULT_FIBER,
+  DEFAULT_SPLIT,
+  getSettings,
+  saveGoalSettings,
+  saveRingMode,
+  type RingMode,
+} from '@/db/settings';
 import { todayISO } from '@/lib/dates';
+import { computeGoals, isValidSplit, WEEKDAY_NAMES } from '@/lib/goals';
 import { parseNumber } from '@/lib/parse';
-
-const GOAL_LABELS: Record<GoalKey, { label: string; unit: string }> = {
-  calories: { label: 'Calories', unit: 'kcal' },
-  fat: { label: 'Fat', unit: 'g' },
-  carbs: { label: 'Carbs', unit: 'g' },
-  protein: { label: 'Protein', unit: 'g' },
-  fiber: { label: 'Fiber', unit: 'g' },
-};
 
 const RING_OPTIONS = ['Count up', 'Count down'] as const;
 
 export default function SettingsScreen() {
   const db = useSQLiteContext();
-  const [goals, setGoals] = useState<Record<GoalKey, string>>({
-    calories: '',
-    fat: '',
-    carbs: '',
-    protein: '',
-    fiber: '',
-  });
   const [ringMode, setRingMode] = useState<RingMode>('up');
+  const [calories, setCalories] = useState('');
+  const [perDay, setPerDay] = useState(false);
+  const [dayCalories, setDayCalories] = useState<string[]>(Array(7).fill(''));
+  const [protein, setProtein] = useState('');
+  const [fat, setFat] = useState('');
+  const [carbs, setCarbs] = useState('');
+  const [fiber, setFiber] = useState('');
 
   useEffect(() => {
-    getSettings(db).then((settings) => {
-      setRingMode(settings.ringMode);
-      setGoals(Object.fromEntries(GOAL_KEYS.map((k) => [k, String(settings.goals[k])])) as Record<GoalKey, string>);
+    getSettings(db).then((s) => {
+      setRingMode(s.ringMode);
+      setCalories(String(s.calories));
+      setPerDay(s.perDay);
+      setDayCalories(s.weekdayCalories.map(String));
+      setProtein(String(s.split.protein));
+      setFat(String(s.split.fat));
+      setCarbs(String(s.split.carbs));
+      setFiber(String(s.fiber));
     });
   }, [db]);
 
@@ -48,16 +55,58 @@ export default function SettingsScreen() {
     saveRingMode(db, mode);
   };
 
-  const submitGoals = async () => {
-    const parsed = {} as Record<GoalKey, number>;
-    for (const key of GOAL_KEYS) {
-      const value = parseNumber(goals[key]);
-      if (value === null || value <= 0) {
-        return Alert.alert('Invalid goal', `${GOAL_LABELS[key].label} must be a number greater than 0.`);
-      }
-      parsed[key] = value;
+  const togglePerDay = (on: boolean) => {
+    setPerDay(on);
+    // First time on: start every day at the single goal rather than at blank or stale numbers.
+    if (on) setDayCalories((days) => (days.every((d) => d === days[0]) ? Array(7).fill(calories) : days));
+  };
+
+  // Live values, so the macro amounts follow whatever is typed.
+  const proteinPct = parseNumber(protein);
+  const fatPct = parseNumber(fat);
+  const carbsPct = parseNumber(carbs);
+  const fiberGrams = parseNumber(fiber);
+  const typedTotal = (proteinPct ?? 0) + (fatPct ?? 0) + (carbsPct ?? 0);
+  const candidate =
+    proteinPct !== null && fatPct !== null && carbsPct !== null && proteinPct >= 0 && fatPct >= 0 && carbsPct >= 0
+      ? { protein: proteinPct, fat: fatPct, carbs: carbsPct }
+      : null;
+  const split = candidate && isValidSplit(candidate) ? candidate : null;
+  const fiberOk = fiberGrams !== null && fiberGrams >= 0;
+  const caloriesNum = parseNumber(calories);
+
+  const previewFor = (kcal: number | null) =>
+    split && fiberOk && kcal !== null && kcal > 0 ? computeGoals(kcal, split, fiberGrams) : null;
+
+  const resetSplit = () => {
+    setProtein(String(DEFAULT_SPLIT.protein));
+    setFat(String(DEFAULT_SPLIT.fat));
+    setCarbs(String(DEFAULT_SPLIT.carbs));
+    setFiber(String(DEFAULT_FIBER));
+  };
+
+  const save = async () => {
+    if (!split) {
+      return Alert.alert(
+        'Invalid split',
+        `Protein, fat and carbs must be numbers (0 or more) that add up to 100%. They currently add up to ${Math.round(typedTotal * 100) / 100}%.`,
+      );
     }
-    await saveGoals(db, parsed);
+    if (!fiberOk) return Alert.alert('Invalid fiber', 'Fiber must be a number, 0 or greater.');
+    if (caloriesNum === null || caloriesNum <= 0) {
+      return Alert.alert('Invalid calories', 'Calories must be a number greater than 0.');
+    }
+
+    const weekdayCalories: number[] = [];
+    for (let day = 0; day < 7; day++) {
+      const value = parseNumber(dayCalories[day]);
+      if (perDay && (value === null || value <= 0)) {
+        return Alert.alert('Invalid calories', `${WEEKDAY_NAMES[day]} must be a number greater than 0.`);
+      }
+      weekdayCalories.push(value !== null && value > 0 ? value : caloriesNum);
+    }
+
+    await saveGoalSettings(db, { calories: caloriesNum, perDay, weekdayCalories, split, fiber: fiberGrams });
     Alert.alert('Saved', 'Your daily goals were updated.');
   };
 
@@ -77,6 +126,8 @@ export default function SettingsScreen() {
     });
     Alert.alert('Added', 'Sample entry added to today\'s Breakfast.');
   };
+
+  const singlePreview = previewFor(caloriesNum);
 
   return (
     <ThemedView style={styles.fill}>
@@ -100,20 +151,98 @@ export default function SettingsScreen() {
             <ThemedText type="smallBold" style={styles.heading}>
               Daily goals
             </ThemedText>
-            {GOAL_KEYS.map((key) => (
-              <View key={key} style={styles.goalRow}>
-                <ThemedText style={styles.fill}>
-                  {GOAL_LABELS[key].label} ({GOAL_LABELS[key].unit})
-                </ThemedText>
-                <ThemedTextInput
-                  style={styles.goalInput}
-                  value={goals[key]}
-                  onChangeText={(text) => setGoals((g) => ({ ...g, [key]: text }))}
-                  keyboardType="decimal-pad"
-                />
+            <ThemedText type="small" themeColor="textSecondary">
+              Set calories and the other goals follow from your macro split below.
+            </ThemedText>
+
+            <View style={styles.switchRow}>
+              <View style={styles.fill}>
+                <ThemedText>Different calories each day of the week</ThemedText>
               </View>
-            ))}
-            <Button title="Save goals" onPress={submitGoals} />
+              <Switch value={perDay} onValueChange={togglePerDay} />
+            </View>
+
+            {!perDay ? (
+              <ThemedView type="backgroundElement" style={styles.card}>
+                <View style={styles.inputRow}>
+                  <ThemedText style={styles.fill}>Calories (kcal)</ThemedText>
+                  <ThemedTextInput
+                    style={styles.input}
+                    value={calories}
+                    onChangeText={setCalories}
+                    keyboardType="decimal-pad"
+                  />
+                </View>
+                {singlePreview ? (
+                  <GoalPreview goals={singlePreview} split={split as NonNullable<typeof split>} />
+                ) : (
+                  <ThemedText type="small" themeColor="textSecondary">
+                    Enter valid calories and a valid macro split to see your goals.
+                  </ThemedText>
+                )}
+              </ThemedView>
+            ) : (
+              WEEKDAY_NAMES.map((name, day) => {
+                const preview = previewFor(parseNumber(dayCalories[day]));
+                return (
+                  <ThemedView key={name} type="backgroundElement" style={styles.card}>
+                    <View style={styles.inputRow}>
+                      <ThemedText style={styles.fill}>{name}</ThemedText>
+                      <ThemedTextInput
+                        style={styles.input}
+                        value={dayCalories[day]}
+                        onChangeText={(text) => setDayCalories((days) => days.map((d, i) => (i === day ? text : d)))}
+                        keyboardType="decimal-pad"
+                      />
+                    </View>
+                    {preview && (
+                      <ThemedText type="small" themeColor="textSecondary">
+                        P {preview.protein}g · F {preview.fat}g · C {preview.carbs}g · Fiber {preview.fiber}g
+                      </ThemedText>
+                    )}
+                  </ThemedView>
+                );
+              })
+            )}
+
+            <ThemedText type="smallBold" style={styles.heading}>
+              Macro split
+            </ThemedText>
+            <ThemedText type="small" themeColor="textSecondary">
+              Percent of calories from each macro; the three should add up to 100%. Fiber is a fixed amount that
+              doesn't change with calories.
+            </ThemedText>
+            <ThemedView type="backgroundElement" style={styles.card}>
+              <View style={styles.inputRow}>
+                <ThemedText style={styles.fill}>Protein (%)</ThemedText>
+                <ThemedTextInput style={styles.input} value={protein} onChangeText={setProtein} keyboardType="decimal-pad" />
+              </View>
+              <View style={styles.inputRow}>
+                <ThemedText style={styles.fill}>Fat (%)</ThemedText>
+                <ThemedTextInput style={styles.input} value={fat} onChangeText={setFat} keyboardType="decimal-pad" />
+              </View>
+              <View style={styles.inputRow}>
+                <ThemedText style={styles.fill}>Carbs (%)</ThemedText>
+                <ThemedTextInput style={styles.input} value={carbs} onChangeText={setCarbs} keyboardType="decimal-pad" />
+              </View>
+              <View style={styles.inputRow}>
+                <ThemedText themeColor="textSecondary" style={styles.fill}>
+                  Total
+                </ThemedText>
+                <ThemedText style={split ? styles.totalOk : styles.totalBad}>
+                  {Math.round(typedTotal * 100) / 100}%{split ? '' : ' (needs to be 100%)'}
+                </ThemedText>
+              </View>
+              <View style={styles.inputRow}>
+                <ThemedText style={styles.fill}>Fiber (g)</ThemedText>
+                <ThemedTextInput style={styles.input} value={fiber} onChangeText={setFiber} keyboardType="decimal-pad" />
+              </View>
+              <Pressable onPress={resetSplit} hitSlop={8}>
+                <ThemedText type="linkPrimary">Reset to defaults (30% protein, 30% fat, 40% carbs, 25 g fiber)</ThemedText>
+              </Pressable>
+            </ThemedView>
+
+            <Button title="Save goals" onPress={save} />
 
             <ThemedText type="small" themeColor="textSecondary" style={styles.heading}>
               Backup export and import will live here.
@@ -136,6 +265,10 @@ const styles = StyleSheet.create({
   fill: { flex: 1 },
   content: { padding: Spacing.four, gap: Spacing.three, paddingBottom: BottomTabInset + Spacing.four },
   heading: { marginTop: Spacing.three },
-  goalRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three },
-  goalInput: { width: 110, textAlign: 'right' },
+  switchRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three },
+  card: { padding: Spacing.three, borderRadius: 16, gap: Spacing.two },
+  inputRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three },
+  input: { width: 110, textAlign: 'right' },
+  totalOk: { fontWeight: '600', textAlign: 'right' },
+  totalBad: { fontWeight: '600', textAlign: 'right', color: '#D93025' },
 });

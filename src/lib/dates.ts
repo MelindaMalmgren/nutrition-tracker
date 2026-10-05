@@ -5,6 +5,12 @@ export function toISODate(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
+/** Day of the week for a YYYY-MM-DD date, 0 = Sunday. */
+export function weekdayOf(iso: string): number {
+  const [y, m, d] = iso.split('-').map(Number);
+  return new Date(y, m - 1, d).getDay();
+}
+
 export function todayISO(): string {
   return toISODate(new Date());
 }

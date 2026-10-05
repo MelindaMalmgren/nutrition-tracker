@@ -1,9 +1,9 @@
 import { StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 
+import type { RingMode } from '@/db/settings';
 import { useRingColors } from '@/hooks/use-ring-colors';
 import { useTheme } from '@/hooks/use-theme';
-import type { RingMode } from '@/db/settings';
 
 type Props = {
   label: string;
@@ -15,8 +15,22 @@ type Props = {
 };
 
 const STROKE = 6;
+const OVERAGE_SHADE = 0.6;
 
-/** A progress ring. Count up shows what's eaten ("of goal"); count down shows what's left. */
+/** Scales a #rrggbb color toward black (factor 0..1) for the overage arc. */
+function darken(hex: string, factor: number): string {
+  const channel = (start: number) =>
+    Math.round(parseInt(hex.slice(start, start + 2), 16) * factor)
+      .toString(16)
+      .padStart(2, '0');
+  return `#${channel(1)}${channel(3)}${channel(5)}`;
+}
+
+/**
+ * A progress ring. Count up shows what's eaten ("of goal"); count down shows what's left.
+ * Past the goal the ring stays full in its own color, a darker arc from the top shows the overage,
+ * and the label turns red.
+ */
 export function MacroRing({ label, value, goal, color, mode, size = 64 }: Props) {
   const theme = useTheme();
   const colors = useRingColors();
@@ -24,33 +38,50 @@ export function MacroRing({ label, value, goal, color, mode, size = 64 }: Props)
   const radius = (size - STROKE) / 2;
   const circumference = 2 * Math.PI * radius;
   const progress = goal > 0 ? Math.min(Math.max(value / goal, 0), 1) : 0;
-  const over = value > goal;
+  const over = goal > 0 && value > goal;
+  const overFraction = over ? Math.min((value - goal) / goal, 1) : 0;
   const remaining = Math.round(goal - value);
 
   const main = mode === 'up' ? Math.round(value) : over ? `+${-remaining}` : remaining;
   const sub = mode === 'up' ? `of ${Math.round(goal)}` : over ? 'over' : 'left';
 
+  const center = size / 2;
+  const startAtTop = `rotate(-90 ${center} ${center})`;
+
   return (
     <View style={{ width: size, height: size }}>
       <Svg width={size} height={size}>
-        <Circle cx={size / 2} cy={size / 2} r={radius} stroke={colors.track} strokeWidth={STROKE} fill="none" />
+        <Circle cx={center} cy={center} r={radius} stroke={colors.track} strokeWidth={STROKE} fill="none" />
         <Circle
-          cx={size / 2}
-          cy={size / 2}
+          cx={center}
+          cy={center}
           r={radius}
-          stroke={over ? colors.over : color}
+          stroke={color}
           strokeWidth={STROKE}
           fill="none"
           strokeLinecap="round"
           strokeDasharray={`${circumference * progress} ${circumference}`}
-          transform={`rotate(-90 ${size / 2} ${size / 2})`}
+          transform={startAtTop}
         />
+        {over && (
+          <Circle
+            cx={center}
+            cy={center}
+            r={radius}
+            stroke={darken(color, OVERAGE_SHADE)}
+            strokeWidth={STROKE}
+            fill="none"
+            strokeLinecap="round"
+            strokeDasharray={`${circumference * overFraction} ${circumference}`}
+            transform={startAtTop}
+          />
+        )}
       </Svg>
       <View style={styles.center} pointerEvents="none">
-        <Text style={[styles.label, { color: theme.textSecondary }]} numberOfLines={1}>
+        <Text style={[styles.label, { color: over ? colors.over : theme.textSecondary }]} numberOfLines={1}>
           {label}
         </Text>
-        <Text style={[styles.value, { color: over && mode === 'down' ? colors.over : color }]} numberOfLines={1}>
+        <Text style={[styles.value, { color }]} numberOfLines={1}>
           {main}
         </Text>
         <Text style={[styles.sub, { color: theme.textSecondary }]} numberOfLines={1}>
