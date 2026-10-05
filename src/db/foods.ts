@@ -9,10 +9,12 @@ export type NewCustomFood = Nutrition & {
   serving_unit: string;
 };
 
-export function listFoods(db: SQLiteDatabase, query = '', source?: FoodSource) {
+/** Alphabetical. With withUsage, use_count is how many diary entries log each food (otherwise 0). */
+export function listFoods(db: SQLiteDatabase, query = '', source?: FoodSource, withUsage = false) {
   const like = `%${query.trim()}%`;
-  return db.getAllAsync<Food>(
-    `SELECT * FROM foods
+  const usage = withUsage ? '(SELECT COUNT(*) FROM diary_entries d WHERE d.food_id = foods.id)' : '0';
+  return db.getAllAsync<Food & { use_count: number }>(
+    `SELECT foods.*, ${usage} AS use_count FROM foods
       WHERE (name LIKE ? OR brand LIKE ?) AND (? IS NULL OR source = ?)
       ORDER BY name COLLATE NOCASE`,
     like,

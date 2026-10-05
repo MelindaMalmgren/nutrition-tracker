@@ -61,6 +61,10 @@ A recipe is a list of ingredients and how many servings it makes. Each ingredien
 
 An import is all-or-nothing: if the file is damaged, nothing changes. Backups from an older version of the app work; ones from a newer version are refused.
 
+## Most used
+
+In **Add food**, the Meals, Recipes and Custom tabs show the five items you log most under "Most used" (when the search box is empty), then everything else alphabetically. Recipes and custom foods are counted from your diary, so history counts immediately; meals are counted each time you log one, starting from zero. While you're searching, matches you've used before just come first.
+
 ## Project layout
 
 - `src/app/`: screens (Expo Router). `(tabs)/` holds the four main tabs: Diary, Tracker, Library (Foods / Meals / Recipes), Settings. Android's bottom bar allows at most 5 tabs, so keep that in mind before adding another.
