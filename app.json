@@ -34,7 +34,13 @@
         }
       ],
       "expo-sqlite",
-      "expo-sharing"
+      "expo-sharing",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow Nutrition Tracker to use the camera to scan food barcodes."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

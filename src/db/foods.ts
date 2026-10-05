@@ -1,6 +1,6 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 
-import type { Food, FoodSource, Nutrition } from '@/types';
+import type { Food, FoodSource, LookupFood, Nutrition } from '@/types';
 
 export type NewCustomFood = Nutrition & {
   name: string;
@@ -23,29 +23,32 @@ export function listFoods(db: SQLiteDatabase, query = '', source?: FoodSource) {
 }
 
 /** Saves a food looked up from an external database, reusing the existing row if it was saved before. */
-export async function upsertExternalFood(
-  db: SQLiteDatabase,
-  source: 'usda' | 'off',
-  food: NewCustomFood & { external_id: string },
-): Promise<number> {
+export async function upsertExternalFood(db: SQLiteDatabase, food: LookupFood): Promise<number> {
   const existing = await db.getFirstAsync<{ id: number }>(
     'SELECT id FROM foods WHERE source = ? AND external_id = ?',
-    source,
+    food.source,
     food.external_id,
   );
-  if (existing) return existing.id;
+  const portions = food.portions ? JSON.stringify(food.portions) : null;
+  if (existing) {
+    if (portions) await db.runAsync('UPDATE foods SET portions = ? WHERE id = ?', portions, existing.id);
+    return existing.id;
+  }
 
   const result = await db.runAsync(
     `INSERT INTO foods
-       (name, brand, barcode, source, external_id, serving_size, serving_unit,
+       (name, brand, barcode, source, external_id, portions, serving_size, serving_unit, serving_label,
         calories, protein, carbs, fat, fiber, sugar, sodium)
-     VALUES (?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     food.name,
     food.brand,
-    source,
+    food.barcode,
+    food.source,
     food.external_id,
+    portions,
     food.serving_size,
     food.serving_unit,
+    food.serving_label ?? null,
     food.calories,
     food.protein,
     food.carbs,
@@ -55,6 +58,14 @@ export async function upsertExternalFood(
     food.sodium,
   );
   return result.lastInsertRowId;
+}
+
+/** Finds a previously saved food by barcode, ignoring leading zeros (UPC-A vs EAN-13 forms of the same code). */
+export function findFoodByBarcode(db: SQLiteDatabase, barcode: string) {
+  return db.getFirstAsync<Food>(
+    `SELECT * FROM foods WHERE barcode IS NOT NULL AND LTRIM(barcode, '0') = LTRIM(?, '0') LIMIT 1`,
+    barcode,
+  );
 }
 
 export function getFood(db: SQLiteDatabase, id: number) {

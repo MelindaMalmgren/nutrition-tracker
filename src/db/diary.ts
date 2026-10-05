@@ -1,5 +1,6 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 
+import { scaleNutrition } from '@/lib/nutrition';
 import type { DiaryEntry, Food, MealSlot, Nutrition } from '@/types';
 
 export function getEntriesForDate(db: SQLiteDatabase, date: string) {
@@ -17,15 +18,16 @@ type NewEntry = {
   servings: number;
   serving_size?: number;
   serving_unit?: string;
+  serving_label?: string | null;
   food_id?: number | null;
 } & Nutrition;
 
 export async function addEntry(db: SQLiteDatabase, entry: NewEntry) {
   await db.runAsync(
     `INSERT INTO diary_entries
-       (date, meal_slot, food_id, name, servings, serving_size, serving_unit,
+       (date, meal_slot, food_id, name, servings, serving_size, serving_unit, serving_label,
         calories, protein, carbs, fat, fiber, sugar, sodium)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     entry.date,
     entry.meal_slot,
     entry.food_id ?? null,
@@ -33,6 +35,7 @@ export async function addEntry(db: SQLiteDatabase, entry: NewEntry) {
     entry.servings,
     entry.serving_size ?? 1,
     entry.serving_unit ?? 'serving',
+    entry.serving_label ?? null,
     entry.calories,
     entry.protein,
     entry.carbs,
@@ -43,29 +46,29 @@ export async function addEntry(db: SQLiteDatabase, entry: NewEntry) {
   );
 }
 
-/** Logs a food, snapshotting its current per-serving nutrition. */
+/**
+ * Logs a food, snapshotting its per-serving nutrition. If serving_size differs from the food's own,
+ * nutrition is rescaled proportionally (the food itself is left unchanged). serving_label is the household
+ * wording for that size (e.g. "1 cup (158 g)"); omit it when the size is the food's own and needs no wording.
+ */
 export function addFoodEntry(
   db: SQLiteDatabase,
   food: Food,
-  entry: { date: string; meal_slot: MealSlot; servings: number },
+  entry: { date: string; meal_slot: MealSlot; servings: number; serving_size?: number; serving_label?: string | null },
 ) {
+  const { serving_size = food.serving_size, ...rest } = entry;
+  const n = scaleNutrition(food, serving_size / food.serving_size);
   return addEntry(db, {
-    ...entry,
+    ...rest,
+    ...n,
     food_id: food.id,
     name: food.name,
-    serving_size: food.serving_size,
+    serving_size,
     serving_unit: food.serving_unit,
-    calories: food.calories,
-    protein: food.protein,
-    carbs: food.carbs,
-    fat: food.fat,
-    fiber: food.fiber,
-    sugar: food.sugar,
-    sodium: food.sodium,
   });
 }
 
-/** Per-serving nutrition is rescaled by the ratio of new to old serving size. */
+/** Per-serving nutrition is rescaled by the ratio of new to old serving size; a changed size drops the old wording. */
 export async function updateEntry(
   db: SQLiteDatabase,
   entry: DiaryEntry,
@@ -73,12 +76,13 @@ export async function updateEntry(
 ) {
   const factor = changes.serving_size / entry.serving_size;
   await db.runAsync(
-    `UPDATE diary_entries SET meal_slot = ?, servings = ?, serving_size = ?,
+    `UPDATE diary_entries SET meal_slot = ?, servings = ?, serving_size = ?, serving_label = ?,
        calories = ?, protein = ?, carbs = ?, fat = ?, fiber = ?, sugar = ?, sodium = ?
      WHERE id = ?`,
     changes.meal_slot,
     changes.servings,
     changes.serving_size,
+    changes.serving_size === entry.serving_size ? entry.serving_label : null,
     entry.calories * factor,
     entry.protein * factor,
     entry.carbs * factor,
