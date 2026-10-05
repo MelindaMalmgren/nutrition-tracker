@@ -78,6 +78,11 @@ const MIGRATIONS: string[] = [
   ALTER TABLE foods ADD COLUMN external_id TEXT;
   CREATE INDEX idx_foods_external ON foods (source, external_id);
   `,
+  `
+  ALTER TABLE foods ADD COLUMN portions TEXT;
+  ALTER TABLE foods ADD COLUMN serving_label TEXT;
+  ALTER TABLE diary_entries ADD COLUMN serving_label TEXT;
+  `,
 ];
 
 export async function migrateDb(db: SQLiteDatabase) {

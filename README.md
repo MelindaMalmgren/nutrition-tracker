@@ -39,9 +39,17 @@ Food search uses the USDA FoodData Central API, which needs a free API key.
 
 `.env` is gitignored, so the key is not committed. The key is free; the default limit is 1,000 requests per hour. If the key is missing or wrong, the Food tab in "Add food" shows a message saying so.
 
+## Barcode scanning
+
+"Scan barcode" on the Food tab of "Add food" looks a code up in this order: foods you've already saved, [Open Food Facts](https://world.openfoodfacts.org) (no key needed), then USDA branded foods (needs the key above). Anything found is saved to your Foods list, so a repeat scan works offline. The first scan asks for camera permission.
+
+## Serving sizes
+
+When adding a food, the **Serving size** dropdown lists the food's label serving, `1 g` / `1 oz` / `100 g` (for gram-based foods), and household measures such as "1 cup, sliced (150 g)" when the source has them. USDA only provides household measures for non-branded foods (Foundation and SR Legacy), fetched when you pick the food. To log something you weighed, pick `1 g` and enter the grams as Servings. Nutrition rescales automatically.
+
 ## Project layout
 
 - `src/app/`: screens (Expo Router). `(tabs)/` holds the five main tabs: Diary, Foods, Meals, Recipes, Settings.
 - `src/db/`: SQLite migrations and queries. Add new migrations to the end of the list in `migrations.ts`; never edit one that has shipped.
-- `src/services/`: external APIs (USDA).
+- `src/services/`: external APIs (USDA, Open Food Facts).
 - `src/components/`, `src/lib/`, `src/types/`: shared UI, helpers, and types.

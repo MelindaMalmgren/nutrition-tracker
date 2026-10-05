@@ -97,7 +97,7 @@ export default function DiaryScreen() {
                       <View style={styles.entryText}>
                         <ThemedText>{entry.name}</ThemedText>
                         <ThemedText type="small" themeColor="textSecondary">
-                          {entry.servings} × {entry.serving_size} {entry.serving_unit}
+                          {entry.servings} × {entry.serving_label ?? `${entry.serving_size} ${entry.serving_unit}`}
                         </ThemedText>
                       </View>
                       <ThemedText>{round(total.calories)}</ThemedText>
