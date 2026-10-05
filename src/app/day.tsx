@@ -3,7 +3,7 @@ import { useSQLiteContext } from 'expo-sqlite';
 import { useCallback, useRef, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, View, type LayoutChangeEvent } from 'react-native';
 
-import { CheckCircle, mealCheckState } from '@/components/check-circle';
+import { CheckCircle, mealCheckState, mealProgress } from '@/components/check-circle';
 import { DailySummary } from '@/components/daily-summary';
 import { DateSwitcher } from '@/components/date-switcher';
 import { EntryRow } from '@/components/entry-row';
@@ -130,6 +130,7 @@ export default function DayScreen() {
                       {slotEntries.length > 0 && (
                         <CheckCircle
                           state={mealCheckState(slotEntries)}
+                          progress={mealProgress(slotEntries)}
                           onPress={() => toggleMeal(slot)}
                           label={`Mark all of ${slot} eaten`}
                         />
