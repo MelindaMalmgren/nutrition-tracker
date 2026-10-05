@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { BarcodeScanner } from '@/components/barcode-scanner';
 import { Button } from '@/components/button';
 import { FoodRow } from '@/components/food-row';
+import { SectionHeader } from '@/components/section-header';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedTextInput } from '@/components/themed-text-input';
 import { ThemedView } from '@/components/themed-view';
@@ -196,9 +197,7 @@ export function FoodPickerModal({ visible, onClose, onSelect, title = 'Add a foo
                   switch (item.type) {
                     case 'header':
                       return (
-                        <ThemedText type="smallBold" themeColor="textSecondary" style={styles.sectionHeader}>
-                          {item.title}
-                        </ThemedText>
+                        <SectionHeader title={item.title} />
                       );
                     case 'saved':
                       return <FoodRow food={item.food} onPress={() => choose(item.food)} />;
@@ -231,6 +230,5 @@ const styles = StyleSheet.create({
   controls: { paddingHorizontal: Spacing.three, paddingBottom: Spacing.two, gap: Spacing.three },
   searchRow: { flexDirection: 'row', gap: Spacing.two, alignItems: 'center' },
   list: { paddingHorizontal: Spacing.three, paddingBottom: Spacing.six },
-  sectionHeader: { paddingTop: Spacing.two },
   status: { marginTop: Spacing.three },
 });

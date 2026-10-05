@@ -22,6 +22,7 @@ export function EntryRow({ entry, onPress, onLongPress, onToggle }: Props) {
       <View style={styles.text}>
         <ThemedText numberOfLines={1}>{entry.name}</ThemedText>
         <ThemedText type="small" themeColor="textSecondary" numberOfLines={1}>
+          {eaten ? '' : 'Planned · '}
           {entry.servings} × {entry.serving_label ?? `${entry.serving_size} ${entry.serving_unit}`}
         </ThemedText>
       </View>
@@ -33,6 +34,6 @@ export function EntryRow({ entry, onPress, onLongPress, onToggle }: Props) {
 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three, paddingVertical: Spacing.two },
-  planned: { opacity: 0.55 },
+  planned: { opacity: 0.7 },
   text: { flex: 1 },
 });

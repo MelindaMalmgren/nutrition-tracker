@@ -9,6 +9,7 @@ import { Button } from '@/components/button';
 import { FoodRow } from '@/components/food-row';
 import { SegmentedControl } from '@/components/segmented-control';
 import { ServingPanel } from '@/components/serving-panel';
+import { SectionHeader } from '@/components/section-header';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedTextInput } from '@/components/themed-text-input';
 import { ThemedView } from '@/components/themed-view';
@@ -104,11 +105,7 @@ function AddSavedPane({ kind, date, slot }: { kind: 'custom' | 'recipe'; date: s
         contentContainerStyle={styles.list}
         stickySectionHeadersEnabled={false}
         renderSectionHeader={({ section }) =>
-          section.title ? (
-            <ThemedText type="smallBold" themeColor="textSecondary" style={styles.sectionTitle}>
-              {section.title}
-            </ThemedText>
-          ) : null
+          section.title ? <SectionHeader title={section.title} /> : null
         }
         renderItem={({ item }) => <FoodRow food={item} onPress={() => setSelected(item)} />}
         ListEmptyComponent={
@@ -126,5 +123,4 @@ const styles = StyleSheet.create({
   modeRow: { paddingHorizontal: Spacing.three, paddingTop: Spacing.three },
   top: { padding: Spacing.three, gap: Spacing.three },
   list: { paddingHorizontal: Spacing.three, paddingBottom: Spacing.six },
-  sectionTitle: { paddingTop: Spacing.two, paddingBottom: Spacing.one },
 });

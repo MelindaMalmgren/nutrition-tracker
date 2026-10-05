@@ -19,6 +19,7 @@ import {
   type Category,
   type ImportMode,
 } from '@/db/backup';
+import { useRadius } from '@/hooks/use-radius';
 import { useTheme } from '@/hooks/use-theme';
 import { todayISO } from '@/lib/dates';
 
@@ -42,6 +43,7 @@ const EFFECTS: Record<ImportMode, Record<Category, string>> = {
 };
 
 export function BackupSection({ onRestored }: { onRestored: () => void }) {
+  const radius = useRadius();
   const db = useSQLiteContext();
   const theme = useTheme();
   const [busy, setBusy] = useState(false);
@@ -136,7 +138,7 @@ export function BackupSection({ onRestored }: { onRestored: () => void }) {
       <Modal visible={backup !== null} transparent animationType="fade" onRequestClose={() => setBackup(null)}>
         <Pressable style={styles.backdrop} onPress={() => setBackup(null)}>
           <Pressable
-            style={[styles.card, { backgroundColor: theme.background, borderColor: theme.backgroundSelected }]}
+            style={[styles.card, { borderRadius: radius.card }, { backgroundColor: theme.background, borderColor: theme.backgroundSelected }]}
             onPress={() => {}}>
             <ScrollView contentContainerStyle={styles.cardContent}>
             <ThemedText type="subtitle">What to import</ThemedText>
@@ -200,7 +202,7 @@ export function BackupSection({ onRestored }: { onRestored: () => void }) {
 const styles = StyleSheet.create({
   heading: { marginTop: Spacing.three },
   backdrop: { flex: 1, justifyContent: 'center', padding: Spacing.four, backgroundColor: 'rgba(0,0,0,0.5)' },
-  card: { maxHeight: '90%', borderWidth: 1, borderRadius: 16 },
+  card: { maxHeight: '90%', borderWidth: 1, },
   cardContent: { padding: Spacing.four, gap: Spacing.three },
   row: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three },
   rowText: { flex: 1 },

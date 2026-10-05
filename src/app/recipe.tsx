@@ -11,6 +11,7 @@ import { ThemedTextInput } from '@/components/themed-text-input';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { deleteRecipe, getRecipe, getRecipeIngredients, saveRecipe } from '@/db/recipes';
+import { useCard } from '@/hooks/use-card';
 import { useRingColors } from '@/hooks/use-ring-colors';
 import { scaleNutrition, sumNutrition } from '@/lib/nutrition';
 import { parseNumber } from '@/lib/parse';
@@ -27,6 +28,7 @@ type Editing = { food: Food; row?: Row };
 const describe = (row: Row) => `${row.servings} × ${row.label ?? plainServing(row.size, row.food.serving_unit)}`;
 
 export default function RecipeScreen() {
+  const card = useCard();
   const db = useSQLiteContext();
   const router = useRouter();
   const params = useLocalSearchParams<{ id?: string }>();
@@ -170,7 +172,7 @@ export default function RecipeScreen() {
 
           <Button title="+ Add ingredient" variant="secondary" onPress={() => setPickerOpen(true)} />
 
-          <ThemedView type="backgroundElement" style={styles.totals}>
+          <ThemedView type="backgroundElement" style={[styles.totals, card]}>
             <ThemedText type="smallBold">Per serving</ThemedText>
             <ThemedText type="subtitle" style={styles.totalCalories}>
               {perServing ? Math.round(perServing.calories) : '–'} kcal
@@ -246,7 +248,7 @@ const styles = StyleSheet.create({
   field: { gap: Spacing.one },
   inlineRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
   smallInput: { width: 80, textAlign: 'right' },
-  totals: { padding: Spacing.three, borderRadius: 16, gap: Spacing.one },
+  totals: { padding: Spacing.three, gap: Spacing.one },
   totalCalories: { fontSize: 24, lineHeight: 32 },
   notes: { minHeight: 90, textAlignVertical: 'top' },
   deleteLink: { alignSelf: 'flex-start' },

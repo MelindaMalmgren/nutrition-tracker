@@ -11,6 +11,7 @@ import { scaleNutrition } from '@/lib/nutrition';
 import { parseNumber } from '@/lib/parse';
 import { buildServingOptions, labelForEntry } from '@/lib/serving-options';
 import type { Food, Nutrition, ServingOption } from '@/types';
+import { useCard } from '@/hooks/use-card';
 
 export type PanelFood = Pick<Food, 'name' | 'brand' | 'serving_size' | 'serving_unit'> &
   Nutrition & { serving_label?: string | null };
@@ -44,6 +45,7 @@ export function ServingPanel({
   onCancel,
   onAdd,
 }: Props) {
+  const card = useCard();
   const [servings, setServings] = useState(String(initialServings ?? 1));
   const [chosen, setChosen] = useState<ServingOption | null>(initialOption ?? null);
 
@@ -63,7 +65,7 @@ export function ServingPanel({
   const total = valid ? scaleNutrition(perServing, servingsValue) : null;
 
   return (
-    <ThemedView type="backgroundElement" style={styles.panel}>
+    <ThemedView type="backgroundElement" style={[styles.panel, card]}>
       <ThemedText type="smallBold">{food.name}</ThemedText>
       {food.brand && (
         <ThemedText type="small" themeColor="textSecondary">
@@ -124,7 +126,7 @@ export function ServingPanel({
 
 const styles = StyleSheet.create({
   fill: { flex: 1 },
-  panel: { padding: Spacing.three, borderRadius: 16, gap: Spacing.two },
+  panel: { padding: Spacing.three, gap: Spacing.two },
   field: { gap: Spacing.one },
   servings: { flex: 1 },
   size: { flex: 2 },

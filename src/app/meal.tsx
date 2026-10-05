@@ -10,6 +10,7 @@ import { ThemedTextInput } from '@/components/themed-text-input';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { deleteMeal, getMeal, getMealItems, saveMeal } from '@/db/meals';
+import { useCard } from '@/hooks/use-card';
 import { useRingColors } from '@/hooks/use-ring-colors';
 import { scaleNutrition, sumNutrition } from '@/lib/nutrition';
 import { parseNumber } from '@/lib/parse';
@@ -18,6 +19,7 @@ import type { Food } from '@/types';
 type Row = { food: Food; servings: string };
 
 export default function MealScreen() {
+  const card = useCard();
   const db = useSQLiteContext();
   const router = useRouter();
   const colors = useRingColors();
@@ -141,7 +143,7 @@ export default function MealScreen() {
             </Pressable>
           )}
 
-          <ThemedView type="backgroundElement" style={styles.totals}>
+          <ThemedView type="backgroundElement" style={[styles.totals, card]}>
             <ThemedText type="smallBold">Meal total</ThemedText>
             <ThemedText type="subtitle" style={styles.totalCalories}>
               {Math.round(total.calories)} kcal
@@ -167,7 +169,7 @@ const styles = StyleSheet.create({
   itemRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
   servingsInput: { width: 72, textAlign: 'right' },
   remove: { paddingHorizontal: Spacing.one },
-  totals: { padding: Spacing.three, borderRadius: 16, gap: Spacing.one },
+  totals: { padding: Spacing.three, gap: Spacing.one },
   totalCalories: { fontSize: 24, lineHeight: 32 },
   deleteLink: { alignSelf: 'flex-start' },
 });
