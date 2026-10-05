@@ -1,6 +1,6 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 
-import { scaleNutrition } from '@/lib/nutrition';
+import { NUTRIENT_ASSIGNMENTS, NUTRIENT_COLUMNS, NUTRIENT_PLACEHOLDERS, nutrientValues, scaleNutrition } from '@/lib/nutrition';
 import type { DiaryEntry, Food, MealSlot, Nutrition } from '@/types';
 
 export function getEntriesForDate(db: SQLiteDatabase, date: string) {
@@ -45,9 +45,8 @@ type NewEntry = {
 export async function addEntry(db: SQLiteDatabase, entry: NewEntry) {
   await db.runAsync(
     `INSERT INTO diary_entries
-       (date, meal_slot, food_id, name, servings, serving_size, serving_unit, serving_label,
-        calories, protein, carbs, fat, fiber, sugar, sodium)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       (date, meal_slot, food_id, name, servings, serving_size, serving_unit, serving_label, ${NUTRIENT_COLUMNS})
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ${NUTRIENT_PLACEHOLDERS})`,
     entry.date,
     entry.meal_slot,
     entry.food_id ?? null,
@@ -56,13 +55,7 @@ export async function addEntry(db: SQLiteDatabase, entry: NewEntry) {
     entry.serving_size ?? 1,
     entry.serving_unit ?? 'serving',
     entry.serving_label ?? null,
-    entry.calories,
-    entry.protein,
-    entry.carbs,
-    entry.fat,
-    entry.fiber,
-    entry.sugar,
-    entry.sodium,
+    ...nutrientValues(entry),
   );
 }
 
@@ -97,19 +90,13 @@ export async function updateEntry(
   const factor = changes.serving_size / entry.serving_size;
   await db.runAsync(
     `UPDATE diary_entries SET meal_slot = ?, servings = ?, serving_size = ?, serving_label = ?,
-       calories = ?, protein = ?, carbs = ?, fat = ?, fiber = ?, sugar = ?, sodium = ?
+       ${NUTRIENT_ASSIGNMENTS}
      WHERE id = ?`,
     changes.meal_slot,
     changes.servings,
     changes.serving_size,
     changes.serving_size === entry.serving_size ? entry.serving_label : null,
-    entry.calories * factor,
-    entry.protein * factor,
-    entry.carbs * factor,
-    entry.fat * factor,
-    entry.fiber * factor,
-    entry.sugar * factor,
-    entry.sodium * factor,
+    ...nutrientValues(entry, factor),
     entry.id,
   );
 }

@@ -11,14 +11,20 @@ export const splitTotal = (split: MacroSplit) => split.protein + split.fat + spl
 export const isValidSplit = (split: MacroSplit) => Math.abs(splitTotal(split) - 100) < 0.01;
 
 /** Macro goals in grams from a calorie goal and a percentage split. Fiber is a fixed amount. */
-export function computeGoals(calories: number, split: MacroSplit, fiber: number): Goals {
+export function computeGoals(
+  calories: number,
+  split: MacroSplit,
+  fixed: { fiber: number; sugar: number; sodium: number },
+): Goals {
   const grams = (percent: number, kcalPerGram: number) => Math.round((calories * percent) / 100 / kcalPerGram);
   return {
     calories,
     protein: grams(split.protein, KCAL_PER_GRAM.protein),
     fat: grams(split.fat, KCAL_PER_GRAM.fat),
     carbs: grams(split.carbs, KCAL_PER_GRAM.carbs),
-    fiber,
+    fiber: fixed.fiber,
+    sugar: fixed.sugar,
+    sodium: fixed.sodium,
   };
 }
 
@@ -28,5 +34,5 @@ export function caloriesForDate(settings: AppSettings, date: string): number {
 }
 
 export function goalsForDate(settings: AppSettings, date: string): Goals {
-  return computeGoals(caloriesForDate(settings, date), settings.split, settings.fiber);
+  return computeGoals(caloriesForDate(settings, date), settings.split, settings);
 }

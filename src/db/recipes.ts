@@ -1,5 +1,6 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 
+import { NUTRIENT_ASSIGNMENTS, NUTRIENT_COLUMNS, NUTRIENT_PLACEHOLDERS, nutrientValues } from '@/lib/nutrition';
 import { ingredientMultiplier, recipeNutrition } from '@/lib/recipes';
 import type { Food, Nutrition } from '@/types';
 
@@ -56,32 +57,19 @@ export function getRecipeIngredients(db: SQLiteDatabase, recipeId: number) {
 async function writeRecipeFood(db: SQLiteDatabase, foodId: number | null, name: string, n: Nutrition) {
   if (foodId !== null) {
     await db.runAsync(
-      `UPDATE foods SET name = ?, calories = ?, protein = ?, carbs = ?, fat = ?, fiber = ?, sugar = ?, sodium = ?
-       WHERE id = ?`,
+      `UPDATE foods SET name = ?, ${NUTRIENT_ASSIGNMENTS} WHERE id = ?`,
       name,
-      n.calories,
-      n.protein,
-      n.carbs,
-      n.fat,
-      n.fiber,
-      n.sugar,
-      n.sodium,
+      ...nutrientValues(n),
       foodId,
     );
     return foodId;
   }
   const result = await db.runAsync(
     `INSERT INTO foods
-       (name, brand, barcode, source, serving_size, serving_unit, calories, protein, carbs, fat, fiber, sugar, sodium)
-     VALUES (?, NULL, NULL, 'recipe', 1, 'serving', ?, ?, ?, ?, ?, ?, ?)`,
+       (name, brand, barcode, source, serving_size, serving_unit, ${NUTRIENT_COLUMNS})
+     VALUES (?, NULL, NULL, 'recipe', 1, 'serving', ${NUTRIENT_PLACEHOLDERS})`,
     name,
-    n.calories,
-    n.protein,
-    n.carbs,
-    n.fat,
-    n.fiber,
-    n.sugar,
-    n.sodium,
+    ...nutrientValues(n),
   );
   return result.lastInsertRowId;
 }

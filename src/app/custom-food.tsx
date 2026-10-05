@@ -11,17 +11,9 @@ import { Spacing } from '@/constants/theme';
 import { deleteFood, getFood, insertCustomFood, updateCustomFood } from '@/db/foods';
 import { refreshRecipesUsing } from '@/db/recipes';
 import { useRingColors } from '@/hooks/use-ring-colors';
+import { NUTRIENTS } from '@/lib/nutrients';
+import { emptyNutrition } from '@/lib/nutrition';
 import { parseNumber } from '@/lib/parse';
-import type { NutrientKey } from '@/types';
-
-const NUTRIENT_FIELDS: { key: Exclude<NutrientKey, 'sodium'>; label: string; unit: string }[] = [
-  { key: 'calories', label: 'Calories', unit: 'kcal' },
-  { key: 'protein', label: 'Protein', unit: 'g' },
-  { key: 'carbs', label: 'Carbs', unit: 'g' },
-  { key: 'fat', label: 'Fat', unit: 'g' },
-  { key: 'fiber', label: 'Fiber', unit: 'g' },
-  { key: 'sugar', label: 'Sugar', unit: 'g' },
-];
 
 export default function CustomFoodScreen() {
   const db = useSQLiteContext();
@@ -35,7 +27,6 @@ export default function CustomFoodScreen() {
   const [servingSize, setServingSize] = useState('1');
   const [servingUnit, setServingUnit] = useState('serving');
   const [values, setValues] = useState<Record<string, string>>({});
-  const [sodium, setSodium] = useState(0);
 
   useEffect(() => {
     if (editingId === null) return;
@@ -51,8 +42,7 @@ export default function CustomFoodScreen() {
       setBrand(food.brand ?? '');
       setServingSize(String(food.serving_size));
       setServingUnit(food.serving_unit);
-      setSodium(food.sodium);
-      setValues(Object.fromEntries(NUTRIENT_FIELDS.map((f) => [f.key, String(food[f.key])])));
+      setValues(Object.fromEntries(NUTRIENTS.map((f) => [f.key, food[f.key] ? String(food[f.key]) : ''])));
     })();
     return () => {
       cancelled = true;
@@ -65,8 +55,8 @@ export default function CustomFoodScreen() {
     const size = parseNumber(servingSize);
     if (size === null || size <= 0) return Alert.alert('Invalid serving size', 'Serving size must be greater than 0.');
 
-    const nutrition = { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0, sugar: 0, sodium };
-    for (const field of NUTRIENT_FIELDS) {
+    const nutrition = emptyNutrition();
+    for (const field of NUTRIENTS) {
       const raw = values[field.key] ?? '';
       const n = parseNumber(raw);
       if (raw.trim() !== '' && (n === null || n < 0)) {
@@ -113,6 +103,21 @@ export default function CustomFoodScreen() {
     );
   };
 
+  const renderField = (field: (typeof NUTRIENTS)[number]) => (
+    <View key={field.key} style={styles.nutrientRow}>
+      <ThemedText style={styles.fill}>
+        {field.label} ({field.unit})
+      </ThemedText>
+      <ThemedTextInput
+        style={styles.nutrientInput}
+        value={values[field.key] ?? ''}
+        onChangeText={(text) => setValues((v) => ({ ...v, [field.key]: text }))}
+        keyboardType="decimal-pad"
+        placeholder="0"
+      />
+    </View>
+  );
+
   return (
     <ThemedView style={styles.fill}>
       <Stack.Screen options={{ title: editingId === null ? 'New custom food' : 'Edit food' }} />
@@ -150,20 +155,12 @@ export default function CustomFoodScreen() {
         <ThemedText type="smallBold" themeColor="textSecondary">
           Nutrition per serving
         </ThemedText>
-        {NUTRIENT_FIELDS.map((field) => (
-          <View key={field.key} style={styles.nutrientRow}>
-            <ThemedText style={styles.fill}>
-              {field.label} ({field.unit})
-            </ThemedText>
-            <ThemedTextInput
-              style={styles.nutrientInput}
-              value={values[field.key] ?? ''}
-              onChangeText={(text) => setValues((v) => ({ ...v, [field.key]: text }))}
-              keyboardType="decimal-pad"
-              placeholder="0"
-            />
-          </View>
-        ))}
+        {NUTRIENTS.filter((f) => f.group === 'main').map(renderField)}
+
+        <ThemedText type="smallBold" themeColor="textSecondary">
+          More nutrients (optional)
+        </ThemedText>
+        {NUTRIENTS.filter((f) => f.group === 'more').map(renderField)}
 
         {editingId !== null && (
           <ThemedText type="small" themeColor="textSecondary">

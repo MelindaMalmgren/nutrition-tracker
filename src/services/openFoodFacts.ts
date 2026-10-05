@@ -76,6 +76,17 @@ export async function lookupOffBarcode(barcode: string, signal?: AbortSignal): P
     fat: get('fat_100g'),
     fiber: get('fiber_100g'),
     sugar: get('sugars_100g'),
-    sodium: get('sodium_100g', 1000), // OFF reports sodium in grams
+    // OFF reports these in grams per 100 g; we store mg (and mcg for vitamin A).
+    sodium: get('sodium_100g', 1000),
+    sat_fat: get('saturated-fat_100g'),
+    poly_fat: get('polyunsaturated-fat_100g'),
+    mono_fat: get('monounsaturated-fat_100g'),
+    trans_fat: get('trans-fat_100g'),
+    cholesterol: get('cholesterol_100g', 1000),
+    potassium: get('potassium_100g', 1000),
+    vitamin_a: get('vitamin-a_100g', 1_000_000),
+    vitamin_c: get('vitamin-c_100g', 1000),
+    calcium: get('calcium_100g', 1000),
+    iron: get('iron_100g', 1000),
   };
 }

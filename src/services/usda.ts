@@ -35,7 +35,21 @@ const NUTRIENT_NUMBERS = {
   fiber: ['291'],
   sugar: ['269'],
   sodium: ['307'],
+  sat_fat: ['606'],
+  poly_fat: ['646'],
+  mono_fat: ['645'],
+  trans_fat: ['605'],
+  cholesterol: ['601'],
+  potassium: ['306'],
+  vitamin_a_rae: ['320'],
+  vitamin_a_iu: ['318'],
+  vitamin_c: ['401'],
+  calcium: ['301'],
+  iron: ['303'],
 } as const;
+
+// Branded foods usually report vitamin A in IU rather than mcg RAE; 1 IU is about 0.3 mcg RAE.
+const IU_TO_MCG_RAE = 0.3;
 
 function nutrientValue(nutrients: UsdaNutrient[], numbers: readonly string[]): number {
   for (const number of numbers) {
@@ -93,6 +107,16 @@ function normalize(food: UsdaSearchFood): LookupFood {
     fiber: get(NUTRIENT_NUMBERS.fiber),
     sugar: get(NUTRIENT_NUMBERS.sugar),
     sodium: get(NUTRIENT_NUMBERS.sodium),
+    sat_fat: get(NUTRIENT_NUMBERS.sat_fat),
+    poly_fat: get(NUTRIENT_NUMBERS.poly_fat),
+    mono_fat: get(NUTRIENT_NUMBERS.mono_fat),
+    trans_fat: get(NUTRIENT_NUMBERS.trans_fat),
+    cholesterol: get(NUTRIENT_NUMBERS.cholesterol),
+    potassium: get(NUTRIENT_NUMBERS.potassium),
+    vitamin_a: get(NUTRIENT_NUMBERS.vitamin_a_rae) || round2(get(NUTRIENT_NUMBERS.vitamin_a_iu) * IU_TO_MCG_RAE),
+    vitamin_c: get(NUTRIENT_NUMBERS.vitamin_c),
+    calcium: get(NUTRIENT_NUMBERS.calcium),
+    iron: get(NUTRIENT_NUMBERS.iron),
   };
 }
 

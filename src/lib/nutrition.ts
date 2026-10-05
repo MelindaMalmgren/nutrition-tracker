@@ -1,7 +1,17 @@
 import { NUTRIENT_KEYS, type Nutrition } from '@/types';
 
 export function emptyNutrition(): Nutrition {
-  return { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0, sugar: 0, sodium: 0 };
+  return Object.fromEntries(NUTRIENT_KEYS.map((key) => [key, 0])) as Nutrition;
+}
+
+/** Pieces for SQL that reads or writes every nutrient column, always in NUTRIENT_KEYS order. */
+export const NUTRIENT_COLUMNS = NUTRIENT_KEYS.join(', ');
+export const NUTRIENT_PLACEHOLDERS = NUTRIENT_KEYS.map(() => '?').join(', ');
+export const NUTRIENT_ASSIGNMENTS = NUTRIENT_KEYS.map((key) => `${key} = ?`).join(', ');
+
+/** The nutrient values in NUTRIENT_KEYS order (optionally scaled), to bind to the SQL above. */
+export function nutrientValues(n: Nutrition, factor = 1): number[] {
+  return NUTRIENT_KEYS.map((key) => n[key] * factor);
 }
 
 export function scaleNutrition(n: Nutrition, servings: number): Nutrition {
@@ -36,7 +46,7 @@ export function macroPercents(n: Nutrition): { carbs: number; fat: number; prote
   };
 }
 
-type EntryLike =Nutrition & { servings: number; consumed: number };
+type EntryLike = Nutrition & { servings: number; consumed: number };
 
 /** Totals for entries marked eaten. */
 export function sumConsumed(entries: EntryLike[]): Nutrition {
