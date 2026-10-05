@@ -17,6 +17,16 @@ export async function getDatesWithEntries(db: SQLiteDatabase, from: string, to: 
   return new Set(rows.map((r) => r.date));
 }
 
+export type DayStatus = 'logged' | 'planned';
+
+/** Every date that has entries: 'logged' if at least one item is eaten, 'planned' if all are only planned. */
+export async function getDayStatuses(db: SQLiteDatabase) {
+  const rows = await db.getAllAsync<{ date: string; eaten: number }>(
+    'SELECT date, MAX(consumed) AS eaten FROM diary_entries GROUP BY date',
+  );
+  return new Map<string, DayStatus>(rows.map((r) => [r.date, r.eaten ? 'logged' : 'planned']));
+}
+
 export function getEntry(db: SQLiteDatabase, id: number) {
   return db.getFirstAsync<DiaryEntry>('SELECT * FROM diary_entries WHERE id = ?', id);
 }

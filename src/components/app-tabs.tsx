@@ -3,11 +3,11 @@ import { useColorScheme } from 'react-native';
 
 import { Colors } from '@/constants/theme';
 
+// Android's bottom bar holds at most 5 tabs, so Foods, Meals and Recipes share the Library tab.
 const TABS = [
   { name: 'index', label: 'Diary', sf: 'book', md: 'book_2' },
-  { name: 'foods', label: 'Foods', sf: 'fork.knife', md: 'restaurant' },
-  { name: 'meals', label: 'Meals', sf: 'tray', md: 'lunch_dining' },
-  { name: 'recipes', label: 'Recipes', sf: 'menucard', md: 'menu_book' },
+  { name: 'tracker', label: 'Tracker', sf: 'calendar', md: 'calendar_month' },
+  { name: 'library', label: 'Library', sf: 'books.vertical', md: 'restaurant' },
   { name: 'settings', label: 'Settings', sf: 'gearshape', md: 'settings' },
 ] as const;
 
