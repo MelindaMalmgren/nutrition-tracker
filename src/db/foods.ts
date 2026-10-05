@@ -1,6 +1,6 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 
-import type { Food, FoodSource, LookupFood, Nutrition } from '@/types';
+import type { Food, FoodSource, LookupFood, Nutrition, ServingOption } from '@/types';
 
 export type NewCustomFood = Nutrition & {
   name: string;
@@ -66,6 +66,11 @@ export function findFoodByBarcode(db: SQLiteDatabase, barcode: string) {
     `SELECT * FROM foods WHERE barcode IS NOT NULL AND LTRIM(barcode, '0') = LTRIM(?, '0') LIMIT 1`,
     barcode,
   );
+}
+
+/** Remembers household measures fetched for a food so they work offline next time. */
+export async function saveFoodPortions(db: SQLiteDatabase, id: number, portions: ServingOption[]) {
+  await db.runAsync('UPDATE foods SET portions = ? WHERE id = ?', JSON.stringify(portions), id);
 }
 
 export function getFood(db: SQLiteDatabase, id: number) {

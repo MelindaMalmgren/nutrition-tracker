@@ -1,7 +1,7 @@
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useEffect, useState } from 'react';
-import { Alert, KeyboardAvoidingView, ScrollView, StyleSheet, View } from 'react-native';
+import { Alert, KeyboardAvoidingView, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/button';
 import { ThemedText } from '@/components/themed-text';
@@ -9,6 +9,8 @@ import { ThemedTextInput } from '@/components/themed-text-input';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { deleteFood, getFood, insertCustomFood, updateCustomFood } from '@/db/foods';
+import { refreshRecipesUsing } from '@/db/recipes';
+import { useRingColors } from '@/hooks/use-ring-colors';
 import { parseNumber } from '@/lib/parse';
 import type { NutrientKey } from '@/types';
 
@@ -24,6 +26,7 @@ const NUTRIENT_FIELDS: { key: Exclude<NutrientKey, 'sodium'>; label: string; uni
 export default function CustomFoodScreen() {
   const db = useSQLiteContext();
   const router = useRouter();
+  const colors = useRingColors();
   const params = useLocalSearchParams<{ id?: string }>();
   const editingId = params.id ? Number(params.id) : null;
 
@@ -80,7 +83,10 @@ export default function CustomFoodScreen() {
       ...nutrition,
     };
     if (editingId === null) await insertCustomFood(db, food);
-    else await updateCustomFood(db, editingId, food);
+    else {
+      await updateCustomFood(db, editingId, food);
+      await refreshRecipesUsing(db, editingId);
+    }
     router.back();
   };
 
@@ -133,6 +139,14 @@ export default function CustomFoodScreen() {
           </View>
         </View>
 
+        {editingId !== null && (
+          <Pressable onPress={confirmDelete} hitSlop={8} style={styles.deleteLink} accessibilityLabel="Delete food">
+            <ThemedText type="small" style={{ color: colors.over }}>
+              Delete food
+            </ThemedText>
+          </Pressable>
+        )}
+
         <ThemedText type="smallBold" themeColor="textSecondary">
           Nutrition per serving
         </ThemedText>
@@ -158,7 +172,6 @@ export default function CustomFoodScreen() {
         )}
 
         <Button title={editingId === null ? 'Save food' : 'Save changes'} onPress={save} />
-        {editingId !== null && <Button title="Delete food" variant="danger" onPress={confirmDelete} />}
       </ScrollView>
       </KeyboardAvoidingView>
     </ThemedView>
@@ -172,4 +185,5 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', gap: Spacing.three },
   nutrientRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three },
   nutrientInput: { width: 110, textAlign: 'right' },
+  deleteLink: { alignSelf: 'flex-start' },
 });

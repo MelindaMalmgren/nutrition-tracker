@@ -90,6 +90,10 @@ const MIGRATIONS: string[] = [
     value TEXT NOT NULL
   );
   `,
+  `
+  ALTER TABLE recipe_ingredients ADD COLUMN serving_size REAL;
+  ALTER TABLE recipe_ingredients ADD COLUMN serving_label TEXT;
+  `,
 ];
 
 export async function migrateDb(db: SQLiteDatabase) {

@@ -13,17 +13,9 @@ import { Spacing } from '@/constants/theme';
 import { addFoodEntry } from '@/db/diary';
 import { getFood, listFoods, upsertExternalFood } from '@/db/foods';
 import { lookupBarcode, savedToLookup } from '@/lib/barcode-lookup';
-import { fetchUsdaPortions, searchUsda, USDA_KEY_MISSING } from '@/services/usda';
+import { describeError } from '@/lib/lookup-errors';
+import { fetchUsdaPortions, searchUsda } from '@/services/usda';
 import type { LookupFood, MealSlot } from '@/types';
-
-function describeError(e: unknown): string {
-  const message = e instanceof Error ? e.message : '';
-  if (message === USDA_KEY_MISSING) {
-    return 'No USDA API key found. Add EXPO_PUBLIC_USDA_API_KEY to .env, then restart Expo with: npx expo start -c';
-  }
-  if (message.startsWith('USDA') || message.startsWith('Open Food Facts')) return message;
-  return 'Could not reach the food database. Check your connection and try again.';
-}
 
 export function AddSearchPane({ date, slot }: { date: string; slot: MealSlot }) {
   const db = useSQLiteContext();
@@ -145,7 +137,7 @@ export function AddSearchPane({ date, slot }: { date: string; slot: MealSlot }) 
             food={selected}
             portions={selected.portions}
             loadingMeasures={loadingMeasures}
-            slot={slot}
+            actionLabel={`Add to ${slot}`}
             busy={saving}
             onCancel={() => setSelected(null)}
             onAdd={logFood}

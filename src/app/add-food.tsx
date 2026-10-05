@@ -17,7 +17,24 @@ import { addFoodEntry } from '@/db/diary';
 import { listFoods } from '@/db/foods';
 import { MEAL_SLOTS, type Food, type MealSlot } from '@/types';
 
-const MODES = ['Food', 'Meals', 'Custom'] as const;
+const MODES = ['Food', 'Meals', 'Recipes', 'Custom'] as const;
+
+const SAVED_COPY = {
+  custom: {
+    search: 'Search your custom foods',
+    create: '+ Create custom food',
+    createRoute: '/custom-food',
+    empty: 'No custom foods yet. Create one to get started.',
+    noMatch: 'No matching foods.',
+  },
+  recipe: {
+    search: 'Search your recipes',
+    create: '+ Create recipe',
+    createRoute: '/recipe',
+    empty: 'No recipes yet. Create one to get started.',
+    noMatch: 'No matching recipes.',
+  },
+} as const;
 
 export default function AddFoodScreen() {
   const params = useLocalSearchParams<{ date: string; slot: string }>();
@@ -32,20 +49,22 @@ export default function AddFoodScreen() {
       </View>
       {mode === 'Food' && <AddSearchPane date={params.date} slot={slot} />}
       {mode === 'Meals' && <AddMealPane date={params.date} slot={slot} />}
-      {mode === 'Custom' && <AddCustomPane date={params.date} slot={slot} />}
+      {mode === 'Recipes' && <AddSavedPane kind="recipe" date={params.date} slot={slot} />}
+      {mode === 'Custom' && <AddSavedPane kind="custom" date={params.date} slot={slot} />}
     </ThemedView>
   );
 }
 
-function AddCustomPane({ date, slot }: { date: string; slot: MealSlot }) {
+function AddSavedPane({ kind, date, slot }: { kind: 'custom' | 'recipe'; date: string; slot: MealSlot }) {
   const db = useSQLiteContext();
   const router = useRouter();
+  const copy = SAVED_COPY[kind];
 
   const [query, setQuery] = useState('');
   const [foods, setFoods] = useState<Food[]>([]);
   const [selected, setSelected] = useState<Food | null>(null);
 
-  const load = useCallback(async () => setFoods(await listFoods(db, query, 'custom')), [db, query]);
+  const load = useCallback(async () => setFoods(await listFoods(db, query, kind)), [db, query, kind]);
 
   useFocusEffect(
     useCallback(() => {
@@ -62,18 +81,18 @@ function AddCustomPane({ date, slot }: { date: string; slot: MealSlot }) {
   return (
     <View style={styles.fill}>
       <View style={styles.top}>
-        <ThemedTextInput value={query} onChangeText={setQuery} placeholder="Search your custom foods" />
+        <ThemedTextInput value={query} onChangeText={setQuery} placeholder={copy.search} />
 
         {selected ? (
           <ServingPanel
             key={selected.id}
             food={selected}
-            slot={slot}
+            actionLabel={`Add to ${slot}`}
             onCancel={() => setSelected(null)}
             onAdd={logFood}
           />
         ) : (
-          <Button title="+ Create custom food" variant="secondary" onPress={() => router.push('/custom-food')} />
+          <Button title={copy.create} variant="secondary" onPress={() => router.push(copy.createRoute)} />
         )}
       </View>
 
@@ -85,7 +104,7 @@ function AddCustomPane({ date, slot }: { date: string; slot: MealSlot }) {
         renderItem={({ item }) => <FoodRow food={item} onPress={() => setSelected(item)} />}
         ListEmptyComponent={
           <ThemedText themeColor="textSecondary">
-            {query ? 'No matching foods.' : 'No custom foods yet. Create one to get started.'}
+            {query ? copy.noMatch : copy.empty}
           </ThemedText>
         }
       />
