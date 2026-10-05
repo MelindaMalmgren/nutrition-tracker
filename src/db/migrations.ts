@@ -83,6 +83,13 @@ const MIGRATIONS: string[] = [
   ALTER TABLE foods ADD COLUMN serving_label TEXT;
   ALTER TABLE diary_entries ADD COLUMN serving_label TEXT;
   `,
+  `
+  ALTER TABLE diary_entries ADD COLUMN consumed INTEGER NOT NULL DEFAULT 1;
+  CREATE TABLE settings (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL
+  );
+  `,
 ];
 
 export async function migrateDb(db: SQLiteDatabase) {

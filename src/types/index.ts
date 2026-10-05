@@ -52,4 +52,6 @@ export type DiaryEntry = Nutrition & {
   serving_unit: string;
   /** Household wording for the serving (e.g. "1 cup, sliced (150 g)"); null means show serving_size + unit. */
   serving_label: string | null;
+  /** 1 = eaten (counts toward daily totals), 0 = only planned. */
+  consumed: number;
 };
