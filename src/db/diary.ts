@@ -27,6 +27,14 @@ export async function getDayStatuses(db: SQLiteDatabase) {
   return new Map<string, DayStatus>(rows.map((r) => [r.date, r.eaten ? 'logged' : 'planned']));
 }
 
+/** Calories eaten (checked items only) on each date that has any. */
+export async function getDayCalories(db: SQLiteDatabase) {
+  const rows = await db.getAllAsync<{ date: string; calories: number }>(
+    'SELECT date, SUM(calories * servings) AS calories FROM diary_entries WHERE consumed = 1 GROUP BY date',
+  );
+  return new Map<string, number>(rows.map((r) => [r.date, r.calories]));
+}
+
 export function getEntry(db: SQLiteDatabase, id: number) {
   return db.getFirstAsync<DiaryEntry>('SELECT * FROM diary_entries WHERE id = ?', id);
 }

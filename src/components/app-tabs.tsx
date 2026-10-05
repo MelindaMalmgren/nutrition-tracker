@@ -1,7 +1,6 @@
 import { NativeTabs } from 'expo-router/unstable-native-tabs';
-import { useColorScheme } from 'react-native';
 
-import { Colors } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 
 // Android's bottom bar holds at most 5 tabs, so Foods, Meals and Recipes share the Library tab.
 const TABS = [
@@ -12,14 +11,14 @@ const TABS = [
 ] as const;
 
 export default function AppTabs() {
-  const scheme = useColorScheme();
-  const colors = Colors[scheme === 'unspecified' || !scheme ? 'light' : scheme];
+  const colors = useTheme();
 
   return (
     <NativeTabs
       backgroundColor={colors.background}
       indicatorColor={colors.backgroundElement}
-      labelStyle={{ selected: { color: colors.text } }}>
+      labelStyle={{ selected: { color: colors.text } }}
+      iconColor={{ default: colors.textSecondary, selected: colors.accentText }}>
       {TABS.map((tab) => (
         <NativeTabs.Trigger key={tab.name} name={tab.name}>
           <NativeTabs.Trigger.Label>{tab.label}</NativeTabs.Trigger.Label>

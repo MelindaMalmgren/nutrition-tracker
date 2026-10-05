@@ -9,6 +9,8 @@ import { ThemedTextInput } from '@/components/themed-text-input';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { getEntry, setEntryConsumed, updateEntry } from '@/db/diary';
+import { useCard } from '@/hooks/use-card';
+import { useRadius } from '@/hooks/use-radius';
 import { useTheme } from '@/hooks/use-theme';
 import { formatDateLabel } from '@/lib/dates';
 import { NUTRIENTS } from '@/lib/nutrients';
@@ -19,6 +21,8 @@ import { MEAL_SLOTS, type DiaryEntry, type MealSlot } from '@/types';
 const fmt = (n: number) => String(Math.round(n * 10) / 10);
 
 export default function EditEntryScreen() {
+  const radius = useRadius();
+  const card = useCard();
   const db = useSQLiteContext();
   const router = useRouter();
   const theme = useTheme();
@@ -83,12 +87,12 @@ export default function EditEntryScreen() {
 
           <View style={styles.field}>
             <ThemedText type="smallBold">Meal</ThemedText>
-            <Pressable onPress={() => setMenuOpen((open) => !open)} style={[styles.dropdown, { borderColor: theme.backgroundSelected, backgroundColor: theme.backgroundElement }]}>
+            <Pressable onPress={() => setMenuOpen((open) => !open)} style={[styles.dropdown, { borderRadius: radius.control }, { borderColor: theme.backgroundSelected, backgroundColor: theme.backgroundElement }]}>
               <ThemedText>{slot}</ThemedText>
               <ThemedText themeColor="textSecondary">{menuOpen ? '▲' : '▼'}</ThemedText>
             </Pressable>
             {menuOpen && (
-              <ThemedView type="backgroundElement" style={[styles.menu, { borderColor: theme.backgroundSelected }]}>
+              <ThemedView type="backgroundElement" style={[styles.menu, { borderRadius: radius.control }, { borderColor: theme.backgroundSelected }]}>
                 {MEAL_SLOTS.map((s) => (
                   <Pressable
                     key={s}
@@ -125,7 +129,7 @@ export default function EditEntryScreen() {
             </View>
           </View>
 
-          <ThemedView type="backgroundElement" style={styles.table}>
+          <ThemedView type="backgroundElement" style={[styles.table, card]}>
             <View style={styles.tableRow}>
               <ThemedText type="smallBold" style={styles.labelCol}>
                 Nutrition
@@ -175,13 +179,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: Spacing.three,
+        paddingHorizontal: Spacing.three,
     minHeight: 44,
   },
-  menu: { borderWidth: 1, borderRadius: 12, overflow: 'hidden' },
+  menu: { borderWidth: 1, overflow: 'hidden' },
   menuItem: { paddingHorizontal: Spacing.three, paddingVertical: Spacing.two + Spacing.one },
-  table: { padding: Spacing.three, borderRadius: 16, gap: Spacing.two },
+  table: { padding: Spacing.three, gap: Spacing.two },
   tableRow: { flexDirection: 'row' },
   labelCol: { flex: 1.2 },
   indent: { paddingLeft: Spacing.three },

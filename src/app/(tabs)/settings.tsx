@@ -26,10 +26,14 @@ import { todayISO } from '@/lib/dates';
 import { computeGoals, isValidSplit, WEEKDAY_NAMES } from '@/lib/goals';
 import { emptyNutrition } from '@/lib/nutrition';
 import { parseNumber } from '@/lib/parse';
+import { useCard } from '@/hooks/use-card';
+import { useTheme } from '@/hooks/use-theme';
 
 const RING_OPTIONS = ['Count up', 'Count down'] as const;
 
 export default function SettingsScreen() {
+  const card = useCard();
+  const theme = useTheme();
   const db = useSQLiteContext();
   const [ringMode, setRingMode] = useState<RingMode>('up');
   const [calories, setCalories] = useState('');
@@ -191,7 +195,7 @@ export default function SettingsScreen() {
             </View>
 
             {!perDay ? (
-              <ThemedView type="backgroundElement" style={styles.card}>
+              <ThemedView type="backgroundElement" style={[styles.card, card]}>
                 <View style={styles.inputRow}>
                   <ThemedText style={styles.fill}>Calories (kcal)</ThemedText>
                   <ThemedTextInput
@@ -213,7 +217,7 @@ export default function SettingsScreen() {
               WEEKDAY_NAMES.map((name, day) => {
                 const preview = previewFor(parseNumber(dayCalories[day]));
                 return (
-                  <ThemedView key={name} type="backgroundElement" style={styles.card}>
+                  <ThemedView key={name} type="backgroundElement" style={[styles.card, card]}>
                     <View style={styles.inputRow}>
                       <ThemedText style={styles.fill}>{name}</ThemedText>
                       <ThemedTextInput
@@ -240,7 +244,7 @@ export default function SettingsScreen() {
               Percent of calories from each macro; the three should add up to 100%. Fiber, sugar and sodium are fixed
               daily amounts that don't change with calories. Set sugar or sodium to 0 for no goal.
             </ThemedText>
-            <ThemedView type="backgroundElement" style={styles.card}>
+            <ThemedView type="backgroundElement" style={[styles.card, card]}>
               <View style={styles.inputRow}>
                 <ThemedText style={styles.fill}>Protein (%)</ThemedText>
                 <ThemedTextInput style={styles.input} value={protein} onChangeText={setProtein} keyboardType="decimal-pad" />
@@ -257,7 +261,7 @@ export default function SettingsScreen() {
                 <ThemedText themeColor="textSecondary" style={styles.fill}>
                   Total
                 </ThemedText>
-                <ThemedText style={split ? styles.totalOk : styles.totalBad}>
+                <ThemedText style={[split ? styles.totalOk : styles.totalBad, !split && { color: theme.danger }]}>
                   {Math.round(typedTotal * 100) / 100}%{split ? '' : ' (needs to be 100%)'}
                 </ThemedText>
               </View>
@@ -302,9 +306,9 @@ const styles = StyleSheet.create({
   content: { padding: Spacing.four, gap: Spacing.three, paddingBottom: BottomTabInset + Spacing.four },
   heading: { marginTop: Spacing.three },
   switchRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three },
-  card: { padding: Spacing.three, borderRadius: 16, gap: Spacing.two },
+  card: { padding: Spacing.three, gap: Spacing.two },
   inputRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three },
   input: { width: 110, textAlign: 'right' },
   totalOk: { fontWeight: '600', textAlign: 'right' },
-  totalBad: { fontWeight: '600', textAlign: 'right', color: '#D93025' },
+  totalBad: { fontWeight: '600', textAlign: 'right' },
 });

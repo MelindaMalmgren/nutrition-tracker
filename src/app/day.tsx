@@ -7,22 +7,28 @@ import { CheckCircle, mealCheckState } from '@/components/check-circle';
 import { DailySummary } from '@/components/daily-summary';
 import { DateSwitcher } from '@/components/date-switcher';
 import { EntryRow } from '@/components/entry-row';
+import { MacroLine } from '@/components/macro-line';
+import { MealIcon } from '@/components/meal-icon';
 import { NutrientsTable } from '@/components/nutrients-table';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { UnderlineTabs } from '@/components/underline-tabs';
 import { Spacing } from '@/constants/theme';
 import { deleteEntry, getEntriesForDate, setEntryConsumed, setMealConsumed } from '@/db/diary';
+import { useCard } from '@/hooks/use-card';
+import { useRadius } from '@/hooks/use-radius';
 import { useSettings } from '@/hooks/use-settings';
 import { useTheme } from '@/hooks/use-theme';
 import { goalsForDate } from '@/lib/goals';
-import { macroPercents, sumConsumed, sumPlanned } from '@/lib/nutrition';
+import { entryTotal, macroPercents, sumConsumed, sumNutrition, sumPlanned } from '@/lib/nutrition';
 import { useSelectedDate } from '@/lib/selected-date';
 import { MEAL_SLOTS, type DiaryEntry, type MealSlot } from '@/types';
 
 const VIEWS = ['Daily Log', 'Nutrients'] as const;
 
 export default function DayScreen() {
+  const radius = useRadius();
+  const card = useCard();
   const db = useSQLiteContext();
   const router = useRouter();
   const theme = useTheme();
@@ -106,10 +112,20 @@ export default function DayScreen() {
             {loaded &&
               MEAL_SLOTS.map((slot) => {
                 const slotEntries = entries.filter((e) => e.meal_slot === slot);
-                const slotEaten = sumConsumed(slotEntries);
-                const percents = macroPercents(slotEaten);
+                const slotTotal = sumNutrition(slotEntries.map(entryTotal));
+                const percents = macroPercents(slotTotal);
+                const incomplete = slotEntries.length > 0 && mealCheckState(slotEntries) !== 'checked';
                 return (
-                  <ThemedView key={slot} type="backgroundElement" style={styles.card} onLayout={onSectionLayout(slot)}>
+                  <ThemedView
+                    key={slot}
+                    type="backgroundElement"
+                    style={[
+                      styles.card,
+                      card,
+                      slotEntries.length === 0 && { backgroundColor: 'transparent', borderStyle: 'dashed', borderWidth: 1, borderColor: theme.textSecondary },
+                      incomplete && { borderStyle: 'dashed', borderWidth: 1, borderColor: theme.textSecondary },
+                    ]}
+                    onLayout={onSectionLayout(slot)}>
                     <View style={styles.sectionHeader}>
                       {slotEntries.length > 0 && (
                         <CheckCircle
@@ -118,13 +134,14 @@ export default function DayScreen() {
                           label={`Mark all of ${slot} eaten`}
                         />
                       )}
+                      <View style={slotEntries.length === 0 && styles.dimmed}>
+                        <MealIcon slot={slot} size={32} />
+                      </View>
                       <ThemedText style={[styles.sectionTitle, styles.fill]}>{slot}</ThemedText>
-                      <ThemedText style={styles.sectionTitle}>{Math.round(slotEaten.calories)} cal</ThemedText>
+                      <ThemedText style={styles.sectionTitle}>{Math.round(slotTotal.calories)} cal</ThemedText>
                     </View>
                     {percents && (
-                      <ThemedText type="small" themeColor="textSecondary">
-                        C {percents.carbs}% · F {percents.fat}% · P {percents.protein}%
-                      </ThemedText>
+                      <MacroLine carbs={percents.carbs} fat={percents.fat} protein={percents.protein} unit="%" />
                     )}
 
                     {slotEntries.length > 0 && <View style={[styles.divider, { backgroundColor: theme.backgroundSelected }]} />}
@@ -141,7 +158,7 @@ export default function DayScreen() {
                     <View style={styles.logRow}>
                       <Pressable
                         onPress={() => router.push({ pathname: '/add-food', params: { date, slot } })}
-                        style={[styles.logButton, { backgroundColor: theme.backgroundSelected }]}>
+                        style={[styles.logButton, { borderRadius: radius.button }, { backgroundColor: theme.backgroundSelected }]}>
                         <ThemedText type="linkPrimary" style={styles.logText}>
                           {slotEntries.length > 0 ? 'Log more' : 'Log food'}
                         </ThemedText>
@@ -161,11 +178,12 @@ const styles = StyleSheet.create({
   fill: { flex: 1 },
   content: { padding: Spacing.three, gap: Spacing.three, paddingBottom: Spacing.six },
   nutrients: { paddingHorizontal: Spacing.three, paddingBottom: Spacing.six },
-  card: { padding: Spacing.three, borderRadius: 16, gap: Spacing.one },
+  card: { padding: Spacing.three, gap: Spacing.one },
+  dimmed: { opacity: 0.45 },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
   sectionTitle: { fontSize: 18, fontWeight: '600' },
   divider: { height: StyleSheet.hairlineWidth, marginTop: Spacing.one },
   logRow: { alignItems: 'flex-end', marginTop: Spacing.one },
-  logButton: { paddingHorizontal: Spacing.four, paddingVertical: Spacing.two, borderRadius: 16 },
+  logButton: { paddingHorizontal: Spacing.four, paddingVertical: Spacing.two, },
   logText: { fontWeight: '700' },
 });

@@ -6,6 +6,7 @@ import { MonthCalendar } from '@/components/month-calendar';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import { getDatesWithEntries } from '@/db/diary';
+import { useRadius } from '@/hooks/use-radius';
 import { useTheme } from '@/hooks/use-theme';
 import { toISODate, todayISO } from '@/lib/dates';
 
@@ -18,6 +19,7 @@ function parseISO(iso: string) {
 
 /** A month picker for jumping to any date. Days that have diary entries get a dot. */
 export function CalendarModal({ visible, selectedDate, onSelect, onClose }: Props) {
+  const radius = useRadius();
   const db = useSQLiteContext();
   const theme = useTheme();
   const [view, setView] = useState(() => parseISO(selectedDate));
@@ -47,7 +49,7 @@ export function CalendarModal({ visible, selectedDate, onSelect, onClose }: Prop
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <View style={styles.overlay}>
         <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel="Close calendar" />
-        <View style={[styles.card, { backgroundColor: theme.background, borderColor: theme.backgroundSelected }]}>
+        <View style={[styles.card, { borderRadius: radius.card }, { backgroundColor: theme.background, borderColor: theme.backgroundSelected }]}>
           <MonthCalendar
             year={view.year}
             month={view.month}
@@ -60,13 +62,13 @@ export function CalendarModal({ visible, selectedDate, onSelect, onClose }: Prop
                   <View
                     style={[
                       styles.dayCircle,
-                      selected && styles.daySelected,
+                      selected && { backgroundColor: theme.accent },
                       !selected && iso === today && { borderColor: theme.textSecondary, borderWidth: 1 },
                     ]}>
-                    <ThemedText style={selected ? styles.daySelectedText : undefined}>{day}</ThemedText>
+                    <ThemedText style={selected ? [styles.daySelectedText, { color: theme.onAccent }] : undefined}>{day}</ThemedText>
                   </View>
                   <View
-                    style={[styles.dot, marked.has(iso) && { backgroundColor: selected ? 'transparent' : '#3c87f7' }]}
+                    style={[styles.dot, marked.has(iso) && { backgroundColor: selected ? 'transparent' : theme.accentText }]}
                   />
                 </>
               );
@@ -89,10 +91,9 @@ export function CalendarModal({ visible, selectedDate, onSelect, onClose }: Prop
 
 const styles = StyleSheet.create({
   overlay: { flex: 1, justifyContent: 'center', padding: Spacing.three, backgroundColor: 'rgba(0,0,0,0.5)' },
-  card: { borderRadius: 16, borderWidth: 1, padding: Spacing.three, gap: Spacing.two },
+  card: { borderWidth: 1, padding: Spacing.three, gap: Spacing.two },
   dayCircle: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
-  daySelected: { backgroundColor: '#3c87f7' },
-  daySelectedText: { color: '#ffffff', fontWeight: '700' },
+  daySelectedText: { fontWeight: '700' },
   dot: { width: 4, height: 4, borderRadius: 2, marginTop: 1 },
   footer: { flexDirection: 'row', justifyContent: 'space-between', paddingTop: Spacing.two },
 });

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Pressable, SectionList, StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/button';
+import { SectionHeader } from '@/components/section-header';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedTextInput } from '@/components/themed-text-input';
 import { ThemedView } from '@/components/themed-view';
@@ -12,8 +13,10 @@ import { addMealToDiary, listMeals, type MealSummary } from '@/db/meals';
 import { groupMostUsed } from '@/lib/most-used';
 import { parseNumber } from '@/lib/parse';
 import type { MealSlot } from '@/types';
+import { useCard } from '@/hooks/use-card';
 
 export function AddMealPane({ date, slot }: { date: string; slot: MealSlot }) {
+  const card = useCard();
   const db = useSQLiteContext();
   const router = useRouter();
   const [query, setQuery] = useState('');
@@ -48,7 +51,7 @@ export function AddMealPane({ date, slot }: { date: string; slot: MealSlot }) {
         <ThemedTextInput value={query} onChangeText={setQuery} placeholder="Search your meals" />
 
         {selected ? (
-          <ThemedView type="backgroundElement" style={styles.panel}>
+          <ThemedView type="backgroundElement" style={[styles.panel, card]}>
             <ThemedText type="smallBold">{selected.name}</ThemedText>
             <ThemedText type="small" themeColor="textSecondary">
               {selected.item_count} item{selected.item_count === 1 ? '' : 's'} · {Math.round(selected.calories)} kcal
@@ -88,11 +91,7 @@ export function AddMealPane({ date, slot }: { date: string; slot: MealSlot }) {
         contentContainerStyle={styles.list}
         stickySectionHeadersEnabled={false}
         renderSectionHeader={({ section }) =>
-          section.title ? (
-            <ThemedText type="smallBold" themeColor="textSecondary" style={styles.sectionTitle}>
-              {section.title}
-            </ThemedText>
-          ) : null
+          section.title ? <SectionHeader title={section.title} /> : null
         }
         renderItem={({ item }) => (
           <Pressable onPress={() => setSelected(item)} style={styles.mealRow}>
@@ -119,8 +118,7 @@ const styles = StyleSheet.create({
   fill: { flex: 1 },
   top: { padding: Spacing.three, gap: Spacing.three },
   list: { paddingHorizontal: Spacing.three, paddingBottom: Spacing.six },
-  sectionTitle: { paddingTop: Spacing.two, paddingBottom: Spacing.one },
-  panel: { padding: Spacing.three, borderRadius: 16, gap: Spacing.two },
+  panel: { padding: Spacing.three, gap: Spacing.two },
   servingsRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three },
   servingsInput: { width: 100, textAlign: 'right' },
   row: { flexDirection: 'row', gap: Spacing.two },

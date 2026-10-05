@@ -8,32 +8,45 @@ import { MonthCalendar } from '@/components/month-calendar';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, Spacing } from '@/constants/theme';
-import { getDayStatuses } from '@/db/diary';
+import { getDayCalories, getDayStatuses } from '@/db/diary';
+import { useCard } from '@/hooks/use-card';
 import { useRingColors } from '@/hooks/use-ring-colors';
+import { useSettings } from '@/hooks/use-settings';
 import { useTheme } from '@/hooks/use-theme';
+import { readableOn } from '@/lib/color';
 import { todayISO } from '@/lib/dates';
+import { caloriesForDate } from '@/lib/goals';
 import { useSelectedDate } from '@/lib/selected-date';
 import { currentStreak, monthSummary, type DayStatuses } from '@/lib/tracker';
 
 export default function TrackerScreen() {
+  const card = useCard();
   const db = useSQLiteContext();
   const router = useRouter();
   const theme = useTheme();
   const colors = useRingColors();
   const { setDate } = useSelectedDate();
+  const settings = useSettings();
 
   const today = todayISO();
+  const goalColor = (eaten: number, goal: number) => {
+    const ratio = eaten / goal;
+    return ratio > 1.1 ? colors.calories : ratio < 0.9 ? colors.carbs : colors.check;
+  };
   const [view, setView] = useState(() => {
     const now = new Date();
     return { year: now.getFullYear(), month: now.getMonth() };
   });
   const [statuses, setStatuses] = useState<DayStatuses>(new Map());
+  const [calories, setCalories] = useState<Map<string, number>>(new Map());
 
   useFocusEffect(
     useCallback(() => {
       let cancelled = false;
-      getDayStatuses(db).then((result) => {
-        if (!cancelled) setStatuses(result);
+      Promise.all([getDayStatuses(db), getDayCalories(db)]).then(([nextStatuses, nextCalories]) => {
+        if (cancelled) return;
+        setStatuses(nextStatuses);
+        setCalories(nextCalories);
       });
       return () => {
         cancelled = true;
@@ -56,7 +69,7 @@ export default function TrackerScreen() {
         <ScrollView contentContainerStyle={styles.content}>
           <ThemedText type="subtitle">Tracker</ThemedText>
 
-          <ThemedView type="backgroundElement" style={styles.card}>
+          <ThemedView type="backgroundElement" style={[styles.card, card]}>
             <ThemedText style={styles.big}>
               {elapsed > 0 ? `${logged} of ${elapsed} days logged` : 'Nothing to track yet'}
             </ThemedText>
@@ -66,7 +79,7 @@ export default function TrackerScreen() {
             </ThemedText>
           </ThemedView>
 
-          <ThemedView type="backgroundElement" style={styles.card}>
+          <ThemedView type="backgroundElement" style={[styles.card, card]}>
             <MonthCalendar
               year={view.year}
               month={view.month}
@@ -75,20 +88,21 @@ export default function TrackerScreen() {
               renderDay={(iso, day) => {
                 const status = statuses.get(iso);
                 const pastEmpty = iso < today && !status;
+                const fill = status === 'logged' ? goalColor(calories.get(iso) ?? 0, caloriesForDate(settings, iso)) : null;
                 return (
                   <>
                     <View
                       style={[
                         styles.dayCircle,
-                        status === 'logged' && { backgroundColor: colors.check },
+                        fill && { backgroundColor: fill },
                         status === 'planned' && { borderColor: colors.check, borderWidth: 2 },
                         pastEmpty && styles.faded,
                       ]}>
-                      <ThemedText style={[status === 'logged' && styles.loggedText, iso === today && styles.todayText]}>
+                      <ThemedText style={[fill && { color: readableOn(fill), fontWeight: '700' }, iso === today && styles.todayText]}>
                         {day}
                       </ThemedText>
                     </View>
-                    <View style={[styles.dot, iso === today && { backgroundColor: '#3c87f7' }]} />
+                    <View style={[styles.dot, iso === today && { backgroundColor: theme.accentText }]} />
                   </>
                 );
               }}
@@ -99,7 +113,19 @@ export default function TrackerScreen() {
             <View style={styles.legendItem}>
               <View style={[styles.swatch, { backgroundColor: colors.check }]} />
               <ThemedText type="small" themeColor="textSecondary">
-                Logged
+                On target
+              </ThemedText>
+            </View>
+            <View style={styles.legendItem}>
+              <View style={[styles.swatch, { backgroundColor: colors.carbs }]} />
+              <ThemedText type="small" themeColor="textSecondary">
+                Under
+              </ThemedText>
+            </View>
+            <View style={styles.legendItem}>
+              <View style={[styles.swatch, { backgroundColor: colors.calories }]} />
+              <ThemedText type="small" themeColor="textSecondary">
+                Over
               </ThemedText>
             </View>
             <View style={styles.legendItem}>
@@ -117,7 +143,7 @@ export default function TrackerScreen() {
           </View>
 
           <ThemedText type="small" themeColor="textSecondary">
-            Tap a day to open its log.
+            Days are colored by calories eaten against that day's goal: within 10% is on target. Tap a day to open its log.
           </ThemedText>
         </ScrollView>
       </SafeAreaView>
@@ -128,14 +154,13 @@ export default function TrackerScreen() {
 const styles = StyleSheet.create({
   fill: { flex: 1 },
   content: { padding: Spacing.three, gap: Spacing.three, paddingBottom: BottomTabInset + Spacing.four },
-  card: { padding: Spacing.three, borderRadius: 16, gap: Spacing.one },
+  card: { padding: Spacing.three, gap: Spacing.one },
   big: { fontSize: 24, fontWeight: '700', lineHeight: 32 },
   dayCircle: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
   faded: { opacity: 0.35 },
-  loggedText: { color: '#ffffff', fontWeight: '700' },
   todayText: { fontWeight: '700' },
   dot: { width: 4, height: 4, borderRadius: 2, marginTop: 1 },
-  legend: { flexDirection: 'row', justifyContent: 'space-around' },
+  legend: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', columnGap: Spacing.four, rowGap: Spacing.two },
   legendItem: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
   swatch: { width: 16, height: 16, borderRadius: 8 },
 });

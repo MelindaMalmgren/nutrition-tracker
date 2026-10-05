@@ -6,8 +6,6 @@ import { useTheme } from '@/hooks/use-theme';
 
 type Props<T extends string> = { options: readonly T[]; value: T; onChange: (value: T) => void };
 
-const ACCENT = '#3c87f7';
-
 /** Equal-width text tabs with an underline under the selected one. */
 export function UnderlineTabs<T extends string>({ options, value, onChange }: Props<T>) {
   const theme = useTheme();
@@ -21,8 +19,8 @@ export function UnderlineTabs<T extends string>({ options, value, onChange }: Pr
             onPress={() => onChange(option)}
             accessibilityRole="tab"
             accessibilityState={{ selected }}
-            style={[styles.tab, selected && { borderBottomColor: ACCENT }]}>
-            <ThemedText type="smallBold" style={[styles.label, selected && { color: ACCENT }]} themeColor={selected ? undefined : 'textSecondary'}>
+            style={[styles.tab, selected && { borderBottomColor: theme.accentText }]}>
+            <ThemedText type="smallBold" style={[styles.label, selected && { color: theme.accentText }]} themeColor={selected ? undefined : 'textSecondary'}>
               {option.toUpperCase()}
             </ThemedText>
           </Pressable>

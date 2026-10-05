@@ -71,6 +71,10 @@ USDA and Open Food Facts supply all of these when they have them. Custom foods h
 
 In **Add food**, the Meals, Recipes and Custom tabs show the five items you log most under "Most used" (when the search box is empty), then everything else alphabetically. Recipes and custom foods are counted from your diary, so history counts immediately; meals are counted each time you log one, starting from zero. While you're searching, matches you've used before just come first.
 
+## Appearance
+
+A sage-green theme with soft, rounded corners. Light or dark always follows the phone. Colors (`Colors`, `RingColors`) and corner sizes (`Radii`) live in `src/constants/theme.ts`; components read them through `useTheme()`, `useRingColors()`, `useRadius()` and `useCard()`, so don't hardcode colors or `borderRadius` for cards, buttons or inputs. Meals that aren't fully checked get a dashed border, and empty meals an outlined, faded card.
+
 ## Project layout
 
 - `src/app/`: screens (Expo Router). `(tabs)/` holds the four main tabs: Diary, Tracker, Library (Foods / Meals / Recipes), Settings. Android's bottom bar allows at most 5 tabs, so keep that in mind before adding another.
