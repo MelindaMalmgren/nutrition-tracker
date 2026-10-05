@@ -13,6 +13,8 @@ export function GoalPreview({ goals, split }: Props) {
     { label: 'Fat', value: `${goals.fat} g`, percent: `${split.fat}%` },
     { label: 'Carbs', value: `${goals.carbs} g`, percent: `${split.carbs}%` },
     { label: 'Fiber', value: `${goals.fiber} g`, percent: '' },
+    { label: 'Sugar', value: goals.sugar > 0 ? `${goals.sugar} g` : 'No goal', percent: '' },
+    { label: 'Sodium', value: goals.sodium > 0 ? `${goals.sodium} mg` : 'No goal', percent: '' },
   ];
   return (
     <View style={styles.wrap}>

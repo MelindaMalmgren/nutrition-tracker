@@ -3,7 +3,25 @@ export type MealSlot = (typeof MEAL_SLOTS)[number];
 
 export type FoodSource = 'off' | 'usda' | 'custom' | 'recipe';
 
-export const NUTRIENT_KEYS = ['calories', 'protein', 'carbs', 'fat', 'fiber', 'sugar', 'sodium'] as const;
+export const NUTRIENT_KEYS = [
+  'calories',
+  'protein',
+  'carbs',
+  'fat',
+  'fiber',
+  'sugar',
+  'sodium',
+  'sat_fat',
+  'poly_fat',
+  'mono_fat',
+  'trans_fat',
+  'cholesterol',
+  'potassium',
+  'vitamin_a',
+  'vitamin_c',
+  'calcium',
+  'iron',
+] as const;
 export type NutrientKey = (typeof NUTRIENT_KEYS)[number];
 export type Nutrition = Record<NutrientKey, number>;
 
