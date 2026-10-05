@@ -4,12 +4,14 @@ export const GOAL_KEYS = ['calories', 'fat', 'carbs', 'protein', 'fiber', 'sugar
 export type GoalKey = (typeof GOAL_KEYS)[number];
 export type Goals = Record<GoalKey, number>;
 export type RingMode = 'up' | 'down';
+export type ThemeMode = 'system' | 'light' | 'dark';
 
 /** Percent of calories from each macro; the three add up to 100. */
 export type MacroSplit = { protein: number; fat: number; carbs: number };
 
 export type AppSettings = {
   ringMode: RingMode;
+  themeMode: ThemeMode;
   /** The daily calorie goal, used every day unless perDay is on. */
   calories: number;
   perDay: boolean;
@@ -32,6 +34,7 @@ export const DEFAULT_CALORIES = 2000;
 
 export const DEFAULT_SETTINGS: AppSettings = {
   ringMode: 'up',
+  themeMode: 'system',
   calories: DEFAULT_CALORIES,
   perDay: false,
   weekdayCalories: Array(7).fill(DEFAULT_CALORIES),
@@ -44,6 +47,10 @@ export const DEFAULT_SETTINGS: AppSettings = {
 function positive(value: string | undefined, fallback: number, allowZero = false) {
   const n = Number(value);
   return value !== undefined && Number.isFinite(n) && (allowZero ? n >= 0 : n > 0) ? n : fallback;
+}
+
+export function parseThemeMode(value: string | undefined): ThemeMode {
+  return value === 'light' || value === 'dark' ? value : 'system';
 }
 
 export async function getSettings(db: SQLiteDatabase): Promise<AppSettings> {
@@ -60,6 +67,7 @@ export async function getSettings(db: SQLiteDatabase): Promise<AppSettings> {
 
   return {
     ringMode: stored.get('ring_mode') === 'down' ? 'down' : 'up',
+    themeMode: parseThemeMode(stored.get('theme_mode')),
     calories,
     perDay: stored.get('goal_per_day') === '1',
     weekdayCalories: Array.from({ length: 7 }, (_, day) => positive(stored.get(`goal_day_${day}`), calories)),
@@ -78,7 +86,7 @@ async function setSetting(db: SQLiteDatabase, key: string, value: string) {
   );
 }
 
-export async function saveGoalSettings(db: SQLiteDatabase, s: Omit<AppSettings, 'ringMode'>) {
+export async function saveGoalSettings(db: SQLiteDatabase, s: Omit<AppSettings, 'ringMode' | 'themeMode'>) {
   await db.withTransactionAsync(async () => {
     await setSetting(db, 'goal_calories', String(s.calories));
     await setSetting(db, 'goal_per_day', s.perDay ? '1' : '0');
@@ -94,4 +102,8 @@ export async function saveGoalSettings(db: SQLiteDatabase, s: Omit<AppSettings, 
 
 export async function saveRingMode(db: SQLiteDatabase, mode: RingMode) {
   await setSetting(db, 'ring_mode', mode);
+}
+
+export async function saveThemeMode(db: SQLiteDatabase, mode: ThemeMode) {
+  await setSetting(db, 'theme_mode', mode);
 }

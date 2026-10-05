@@ -20,22 +20,27 @@ import {
   getSettings,
   saveGoalSettings,
   saveRingMode,
+  saveThemeMode,
   type RingMode,
+  type ThemeMode,
 } from '@/db/settings';
 import { todayISO } from '@/lib/dates';
 import { computeGoals, isValidSplit, WEEKDAY_NAMES } from '@/lib/goals';
 import { emptyNutrition } from '@/lib/nutrition';
 import { parseNumber } from '@/lib/parse';
+import { applyThemeMode } from '@/lib/theme-mode';
 import { useCard } from '@/hooks/use-card';
 import { useTheme } from '@/hooks/use-theme';
 
 const RING_OPTIONS = ['Count up', 'Count down'] as const;
+const THEME_OPTIONS = ['System', 'Light', 'Dark'] as const;
 
 export default function SettingsScreen() {
   const card = useCard();
   const theme = useTheme();
   const db = useSQLiteContext();
   const [ringMode, setRingMode] = useState<RingMode>('up');
+  const [themeMode, setThemeMode] = useState<ThemeMode>('system');
   const [calories, setCalories] = useState('');
   const [perDay, setPerDay] = useState(false);
   const [dayCalories, setDayCalories] = useState<string[]>(Array(7).fill(''));
@@ -49,6 +54,8 @@ export default function SettingsScreen() {
   const loadSettings = useCallback(() => {
     getSettings(db).then((s) => {
       setRingMode(s.ringMode);
+      setThemeMode(s.themeMode);
+      applyThemeMode(s.themeMode);
       setCalories(String(s.calories));
       setPerDay(s.perDay);
       setDayCalories(s.weekdayCalories.map(String));
@@ -67,6 +74,13 @@ export default function SettingsScreen() {
     const mode: RingMode = option === 'Count up' ? 'up' : 'down';
     setRingMode(mode);
     saveRingMode(db, mode);
+  };
+
+  const changeThemeMode = (option: (typeof THEME_OPTIONS)[number]) => {
+    const mode = option.toLowerCase() as ThemeMode;
+    setThemeMode(mode);
+    applyThemeMode(mode);
+    saveThemeMode(db, mode);
   };
 
   const togglePerDay = (on: boolean) => {
@@ -167,6 +181,18 @@ export default function SettingsScreen() {
         <KeyboardAvoidingView style={styles.fill} behavior="padding">
           <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
             <ThemedText type="subtitle">Settings</ThemedText>
+
+            <ThemedText type="smallBold" style={styles.heading}>
+              Appearance
+            </ThemedText>
+            <SegmentedControl
+              options={THEME_OPTIONS}
+              value={THEME_OPTIONS.find((o) => o.toLowerCase() === themeMode) ?? 'System'}
+              onChange={changeThemeMode}
+            />
+            <ThemedText type="small" themeColor="textSecondary">
+              System follows your phone's light or dark setting. Light or Dark overrides it for this app only.
+            </ThemedText>
 
             <ThemedText type="smallBold" style={styles.heading}>
               Ring display
