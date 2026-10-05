@@ -1,8 +1,9 @@
 import { useSQLiteContext } from 'expo-sqlite';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Alert, KeyboardAvoidingView, Pressable, ScrollView, StyleSheet, Switch, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { BackupSection } from '@/components/backup-section';
 import { Button } from '@/components/button';
 import { GoalPreview } from '@/components/goal-preview';
 import { SegmentedControl } from '@/components/segmented-control';
@@ -36,7 +37,7 @@ export default function SettingsScreen() {
   const [carbs, setCarbs] = useState('');
   const [fiber, setFiber] = useState('');
 
-  useEffect(() => {
+  const loadSettings = useCallback(() => {
     getSettings(db).then((s) => {
       setRingMode(s.ringMode);
       setCalories(String(s.calories));
@@ -48,6 +49,8 @@ export default function SettingsScreen() {
       setFiber(String(s.fiber));
     });
   }, [db]);
+
+  useEffect(loadSettings, [loadSettings]);
 
   const changeRingMode = (option: (typeof RING_OPTIONS)[number]) => {
     const mode: RingMode = option === 'Count up' ? 'up' : 'down';
@@ -244,9 +247,7 @@ export default function SettingsScreen() {
 
             <Button title="Save goals" onPress={save} />
 
-            <ThemedText type="small" themeColor="textSecondary" style={styles.heading}>
-              Backup export and import will live here.
-            </ThemedText>
+            <BackupSection onRestored={loadSettings} />
 
             <ThemedText type="smallBold" style={styles.heading}>
               Dev tools

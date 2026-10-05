@@ -96,6 +96,8 @@ const MIGRATIONS: string[] = [
   `,
 ];
 
+export const MIGRATION_COUNT = MIGRATIONS.length;
+
 export async function migrateDb(db: SQLiteDatabase) {
   await db.execAsync('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;');
 

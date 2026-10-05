@@ -51,6 +51,16 @@ When adding a food, the **Serving size** dropdown lists the food's label serving
 
 A recipe is a list of ingredients and how many servings it makes. Each ingredient is a number of servings of a chosen serving size (grams, ounces, or a household measure like "1 cup, sliced (150 g)"); tap an ingredient to change either. Per-serving nutrition is the whole pot divided by that number. Saved recipes are logged like any other food from **Add food > Recipes**, and can also be added to meals. Ingredients can come from your saved foods, a USDA search, or a barcode scan. Editing a custom food updates every recipe that uses it, and a food used in a recipe can't be deleted until it is removed from the recipe.
 
+## Backup and restore
+
+**Settings > Backup** exports everything (diary, foods, meals, recipes, goals) to one JSON file and opens the Android share sheet, so you can save it to Drive, email it, and so on. **Import backup** picks a file and lets you choose which parts to bring in, and how:
+
+- **Update** (default): **Diary** and **Goals and settings** replace what's in the app. **Foods** adds the ones you don't have yet (matched by USDA/Open Food Facts ID, barcode, or name and brand) and keeps the rest. **Meals** and **Recipes** are added, or updated in place when one with the same name already exists; others are kept. Choosing everything replaces all data with the backup exactly.
+- **Add new only**: nothing that exists is changed or deleted. Recipes and meals are added only if no one of that name exists, diary entries only for days with no entries yet, and settings only if not already set.
+- In both modes, foods that the chosen meals and recipes need are added automatically.
+
+An import is all-or-nothing: if the file is damaged, nothing changes. Backups from an older version of the app work; ones from a newer version are refused.
+
 ## Project layout
 
 - `src/app/`: screens (Expo Router). `(tabs)/` holds the four main tabs: Diary, Tracker, Library (Foods / Meals / Recipes), Settings. Android's bottom bar allows at most 5 tabs, so keep that in mind before adding another.
