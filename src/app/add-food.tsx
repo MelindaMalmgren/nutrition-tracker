@@ -74,9 +74,14 @@ function AddSavedPane({ kind, date, slot }: { kind: 'custom' | 'recipe'; date: s
     }, [load]),
   );
 
-  const logFood = async (choice: { servings: number; serving_size: number; serving_label: string | null }) => {
+  const logFood = async (
+    choice: { servings: number; serving_size: number; serving_label: string | null },
+    dates: string[] = [date],
+  ) => {
     if (!selected) return;
-    await addFoodEntry(db, selected, { date, meal_slot: slot, ...choice });
+    await db.withTransactionAsync(async () => {
+      for (const d of dates) await addFoodEntry(db, selected, { date: d, meal_slot: slot, ...choice });
+    });
     router.back();
   };
 
@@ -91,7 +96,8 @@ function AddSavedPane({ kind, date, slot }: { kind: 'custom' | 'recipe'; date: s
             food={selected}
             actionLabel={`Add to ${slot}`}
             onCancel={() => setSelected(null)}
-            onAdd={logFood}
+            onAdd={(choice) => logFood(choice)}
+            multiDay={{ initialDate: date, onAdd: logFood }}
           />
         ) : (
           <Button title={copy.create} variant="secondary" onPress={() => router.push(copy.createRoute)} />

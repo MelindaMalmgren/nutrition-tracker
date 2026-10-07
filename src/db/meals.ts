@@ -66,18 +66,20 @@ export async function deleteMeal(db: SQLiteDatabase, id: number) {
   await db.runAsync('DELETE FROM meals WHERE id = ?', id);
 }
 
-/** Logs each food in the meal as its own diary entry, using the foods' current nutrition. */
+/** Logs each food in the meal as its own diary entry on every given date, using the foods' current nutrition. */
 export async function addMealToDiary(
   db: SQLiteDatabase,
   mealId: number,
-  date: string,
+  dates: string[],
   slot: MealSlot,
   multiplier: number,
 ) {
   const items = await getMealItems(db, mealId);
   await db.withTransactionAsync(async () => {
-    for (const item of items) {
-      await addFoodEntry(db, item, { date, meal_slot: slot, servings: item.item_servings * multiplier });
+    for (const date of dates) {
+      for (const item of items) {
+        await addFoodEntry(db, item, { date, meal_slot: slot, servings: item.item_servings * multiplier });
+      }
     }
     await db.runAsync('UPDATE meals SET times_logged = times_logged + 1 WHERE id = ?', mealId);
   });

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Pressable, SectionList, StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/button';
+import { MultiDateModal } from '@/components/multi-date-modal';
 import { SectionHeader } from '@/components/section-header';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedTextInput } from '@/components/themed-text-input';
@@ -23,6 +24,7 @@ export function AddMealPane({ date, slot }: { date: string; slot: MealSlot }) {
   const [meals, setMeals] = useState<MealSummary[]>([]);
   const [selected, setSelected] = useState<MealSummary | null>(null);
   const [multiplier, setMultiplier] = useState('1');
+  const [pickingDays, setPickingDays] = useState(false);
 
   const load = useCallback(async () => setMeals(await listMeals(db, query)), [db, query]);
 
@@ -39,9 +41,9 @@ export function AddMealPane({ date, slot }: { date: string; slot: MealSlot }) {
   const multiplierValue = parseNumber(multiplier);
   const valid = multiplierValue !== null && multiplierValue > 0;
 
-  const logMeal = async () => {
+  const logMeal = async (dates: string[]) => {
     if (!selected || !valid) return;
-    await addMealToDiary(db, selected.id, date, slot, multiplierValue);
+    await addMealToDiary(db, selected.id, dates, slot, multiplierValue);
     router.back();
   };
 
@@ -75,9 +77,26 @@ export function AddMealPane({ date, slot }: { date: string; slot: MealSlot }) {
                 <Button title="Cancel" variant="secondary" onPress={() => setSelected(null)} />
               </View>
               <View style={styles.fill}>
-                <Button title={`Add to ${slot}`} onPress={logMeal} disabled={!valid} />
+                <Button title={`Add to ${slot}`} onPress={() => logMeal([date])} disabled={!valid} />
               </View>
             </View>
+            <Button
+              title="Add to multiple days…"
+              variant="secondary"
+              onPress={() => setPickingDays(true)}
+              disabled={!valid}
+            />
+            {pickingDays && (
+              <MultiDateModal
+                initialDate={date}
+                actionLabel="Add"
+                onClose={() => setPickingDays(false)}
+                onConfirm={(dates) => {
+                  setPickingDays(false);
+                  logMeal(dates);
+                }}
+              />
+            )}
           </ThemedView>
         ) : (
           <Button title="+ Create meal" variant="secondary" onPress={() => router.push('/meal')} />

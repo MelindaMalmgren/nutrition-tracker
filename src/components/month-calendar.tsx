@@ -32,6 +32,7 @@ export function MonthCalendar({ year, month, onChangeMonth, onSelect, renderDay 
     ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
   ];
   while (cells.length % 7 !== 0) cells.push(null);
+  const weeks = Array.from({ length: cells.length / 7 }, (_, w) => cells.slice(w * 7, w * 7 + 7));
 
   const title = new Date(year, month, 1).toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
 
@@ -55,16 +56,20 @@ export function MonthCalendar({ year, month, onChangeMonth, onSelect, renderDay 
         ))}
       </View>
 
-      <View style={styles.grid}>
-        {cells.map((day, i) => {
-          if (day === null) return <View key={i} style={styles.cell} />;
-          const iso = toISODate(new Date(year, month, day));
-          return (
-            <Pressable key={i} style={styles.cell} onPress={() => onSelect(iso)}>
-              {renderDay(iso, day)}
-            </Pressable>
-          );
-        })}
+      <View>
+        {weeks.map((week, w) => (
+          <View key={w} style={styles.weekRow}>
+            {week.map((day, i) => {
+              if (day === null) return <View key={i} style={styles.cell} />;
+              const iso = toISODate(new Date(year, month, day));
+              return (
+                <Pressable key={i} style={styles.cell} onPress={() => onSelect(iso)}>
+                  {renderDay(iso, day)}
+                </Pressable>
+              );
+            })}
+          </View>
+        ))}
       </View>
     </View>
   );
@@ -77,6 +82,5 @@ const styles = StyleSheet.create({
   arrow: { fontSize: 28, lineHeight: 32, paddingHorizontal: Spacing.two },
   weekRow: { flexDirection: 'row' },
   weekday: { flex: 1, textAlign: 'center' },
-  grid: { flexDirection: 'row', flexWrap: 'wrap' },
-  cell: { width: `${100 / 7}%`, height: 48, alignItems: 'center', justifyContent: 'center' },
+  cell: { flex: 1, height: 48, alignItems: 'center', justifyContent: 'center' },
 });

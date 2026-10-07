@@ -3,6 +3,7 @@ import { StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/button';
 import { Dropdown } from '@/components/dropdown';
+import { MultiDateModal } from '@/components/multi-date-modal';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedTextInput } from '@/components/themed-text-input';
 import { ThemedView } from '@/components/themed-view';
@@ -16,6 +17,8 @@ import { useCard } from '@/hooks/use-card';
 export type PanelFood = Pick<Food, 'name' | 'brand' | 'serving_size' | 'serving_unit'> &
   Nutrition & { serving_label?: string | null };
 
+type Choice = { servings: number; serving_size: number; serving_label: string | null };
+
 type Props = {
   food: PanelFood;
   /** Household measures from the source (e.g. "1 cup, sliced (150 g)"), if known. */
@@ -28,7 +31,9 @@ type Props = {
   initialServings?: number;
   initialOption?: ServingOption;
   onCancel: () => void;
-  onAdd: (choice: { servings: number; serving_size: number; serving_label: string | null }) => void;
+  onAdd: (choice: Choice) => void;
+  /** When set, offers a calendar to log the same amount on several days at once. */
+  multiDay?: { initialDate: string; onAdd: (choice: Choice, dates: string[]) => void };
 };
 
 const sameOption = (a: ServingOption, b: ServingOption) => a.size === b.size && a.label === b.label;
@@ -44,10 +49,12 @@ export function ServingPanel({
   initialOption,
   onCancel,
   onAdd,
+  multiDay,
 }: Props) {
   const card = useCard();
   const [servings, setServings] = useState(String(initialServings ?? 1));
   const [chosen, setChosen] = useState<ServingOption | null>(initialOption ?? null);
+  const [pickingDays, setPickingDays] = useState(false);
 
   // The chosen size is tracked by value (not list position) because household measures can load in after opening.
   const options = useMemo(() => {
@@ -62,6 +69,7 @@ export function ServingPanel({
   const valid = servingsValue !== null && servingsValue > 0;
 
   const perServing = scaleNutrition(food, option.size / food.serving_size);
+  const choice = valid ? { servings: servingsValue, serving_size: option.size, serving_label: labelForEntry(option) } : null;
   const total = valid ? scaleNutrition(perServing, servingsValue) : null;
 
   return (
@@ -114,12 +122,28 @@ export function ServingPanel({
           <Button
             title={actionLabel}
             disabled={!valid || busy}
-            onPress={() =>
-              valid && onAdd({ servings: servingsValue, serving_size: option.size, serving_label: labelForEntry(option) })
-            }
+            onPress={() => choice && onAdd(choice)}
           />
         </View>
       </View>
+
+      {multiDay && (
+        <>
+          <Button title="Add to multiple days…" variant="secondary" disabled={!valid || busy} onPress={() => setPickingDays(true)} />
+          {pickingDays && (
+            <MultiDateModal
+              initialDate={multiDay.initialDate}
+              actionLabel="Add"
+              busy={busy}
+              onClose={() => setPickingDays(false)}
+              onConfirm={(dates) => {
+                setPickingDays(false);
+                if (choice) multiDay.onAdd(choice, dates);
+              }}
+            />
+          )}
+        </>
+      )}
     </ThemedView>
   );
 }
