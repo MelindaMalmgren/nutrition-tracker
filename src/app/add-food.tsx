@@ -6,6 +6,7 @@ import { SectionList, StyleSheet, View } from 'react-native';
 import { AddMealPane } from '@/components/add-meal-pane';
 import { AddSearchPane } from '@/components/add-search-pane';
 import { Button } from '@/components/button';
+import { Dropdown } from '@/components/dropdown';
 import { FoodRow } from '@/components/food-row';
 import { SegmentedControl } from '@/components/segmented-control';
 import { ServingPanel } from '@/components/serving-panel';
@@ -40,13 +41,21 @@ const SAVED_COPY = {
 
 export default function AddFoodScreen() {
   const params = useLocalSearchParams<{ date: string; slot: string }>();
-  const slot = (MEAL_SLOTS as readonly string[]).includes(params.slot) ? (params.slot as MealSlot) : 'Breakfast';
+  const [slot, setSlot] = useState<MealSlot>(
+    (MEAL_SLOTS as readonly string[]).includes(params.slot) ? (params.slot as MealSlot) : 'Breakfast',
+  );
   const [mode, setMode] = useState<(typeof MODES)[number]>('Food');
 
   return (
     <ThemedView style={styles.fill}>
-      <Stack.Screen options={{ title: `Add to ${slot}` }} />
+      <Stack.Screen options={{ title: 'Add food' }} />
       <View style={styles.modeRow}>
+        <Dropdown
+          options={MEAL_SLOTS}
+          selectedIndex={MEAL_SLOTS.indexOf(slot)}
+          onSelect={(i) => setSlot(MEAL_SLOTS[i])}
+          title="Add to meal"
+        />
         <SegmentedControl options={MODES} value={mode} onChange={setMode} />
       </View>
       {mode === 'Food' && <AddSearchPane date={params.date} slot={slot} />}
@@ -94,7 +103,7 @@ function AddSavedPane({ kind, date, slot }: { kind: 'custom' | 'recipe'; date: s
           <ServingPanel
             key={selected.id}
             food={selected}
-            actionLabel={`Add to ${slot}`}
+            actionLabel="Add to Meal"
             onCancel={() => setSelected(null)}
             onAdd={(choice) => logFood(choice)}
             multiDay={{ initialDate: date, onAdd: logFood }}
@@ -126,7 +135,7 @@ function AddSavedPane({ kind, date, slot }: { kind: 'custom' | 'recipe'; date: s
 
 const styles = StyleSheet.create({
   fill: { flex: 1 },
-  modeRow: { paddingHorizontal: Spacing.three, paddingTop: Spacing.three },
+  modeRow: { paddingHorizontal: Spacing.three, paddingTop: Spacing.three, gap: Spacing.two },
   top: { padding: Spacing.three, gap: Spacing.three },
   list: { paddingHorizontal: Spacing.three, paddingBottom: Spacing.six },
 });

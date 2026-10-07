@@ -77,7 +77,7 @@ export function AddMealPane({ date, slot }: { date: string; slot: MealSlot }) {
                 <Button title="Cancel" variant="secondary" onPress={() => setSelected(null)} />
               </View>
               <View style={styles.fill}>
-                <Button title={`Add to ${slot}`} onPress={() => logMeal([date])} disabled={!valid} />
+                <Button title="Add to Meal" onPress={() => logMeal([date])} disabled={!valid} />
               </View>
             </View>
             <Button
