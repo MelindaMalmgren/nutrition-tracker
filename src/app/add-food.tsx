@@ -4,6 +4,7 @@ import { useCallback, useState } from 'react';
 import { SectionList, StyleSheet, View } from 'react-native';
 
 import { AddMealPane } from '@/components/add-meal-pane';
+import { AddQuickPane } from '@/components/add-quick-pane';
 import { AddSearchPane } from '@/components/add-search-pane';
 import { Button } from '@/components/button';
 import { Dropdown } from '@/components/dropdown';
@@ -20,7 +21,7 @@ import { listFoods } from '@/db/foods';
 import { groupMostUsed } from '@/lib/most-used';
 import { MEAL_SLOTS, type Food, type MealSlot } from '@/types';
 
-const MODES = ['Food', 'Meals', 'Recipes', 'Custom'] as const;
+const MODES = ['Food', 'Meals', 'Recipes', 'Custom', 'Quick'] as const;
 
 const SAVED_COPY = {
   custom: {
@@ -62,6 +63,7 @@ export default function AddFoodScreen() {
       {mode === 'Meals' && <AddMealPane date={params.date} slot={slot} />}
       {mode === 'Recipes' && <AddSavedPane kind="recipe" date={params.date} slot={slot} />}
       {mode === 'Custom' && <AddSavedPane kind="custom" date={params.date} slot={slot} />}
+      {mode === 'Quick' && <AddQuickPane date={params.date} slot={slot} />}
     </ThemedView>
   );
 }
